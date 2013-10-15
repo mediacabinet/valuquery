@@ -1,0 +1,24 @@
+{
+	"name" : "valu/valuquery",
+	"description" : "Valu query module",
+	"version" : "1.0.0",
+	"type" : "library",
+	"keywords" : [
+		"valu",
+		"query",
+		"zend framework 2"
+	],
+	"homepage" : "http://www.mediacabinet.fi/",
+	"license" : [
+		"BSD-3-Clause"
+	],
+	"require" : {
+		"php" : ">=5.4.0"
+	},
+	"autoload" : {
+		"psr-0" : {
+			"ValuQueryTest\\" : "tests/",
+			"ValuQuery\\" : "src/"
+		}
+	}
+}
