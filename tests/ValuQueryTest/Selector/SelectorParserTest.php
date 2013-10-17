@@ -1,8 +1,8 @@
 <?php
-namespace ValuTest\Selector;
+namespace ValuQueryTest\Selector;
 
-use Valu\Selector,
-    Valu\Selector\SimpleSelector\AbstractSelector;
+use ValuQuery\Selector;
+use ValuQuery\Selector\SimpleSelector\AbstractSelector;
 
 class SelectorParserTest extends \PHPUnit_Framework_TestCase{
 

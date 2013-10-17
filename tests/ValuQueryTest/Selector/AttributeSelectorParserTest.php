@@ -1,7 +1,7 @@
 <?php
-namespace ValuTest\Selector;
+namespace ValuQueryTest\Selector;
 
-use Valu\Selector\Parser\AttributeSelectorParser;
+use ValuQuery\Selector\Parser\AttributeSelectorParser;
 
 class AttributeSelectorParserTest extends \PHPUnit_Framework_TestCase{
     
