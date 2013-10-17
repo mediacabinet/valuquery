@@ -11,11 +11,11 @@ class SimpleSelectorEvent extends AbstractEvent
      */
     protected $simpleSelector;
     
-    public function __construct(SimpleSelectorInterface $simpleSelector, $expression, $target = null, $params = null)
+    public function __construct(SimpleSelectorInterface $simpleSelector, $query, $target = null, $params = null)
     {
         parent::__construct('apply'.ucfirst($simpleSelector->getName()).'Selector', $target, $params);
-        
-        $this->setExpression($expression);
+        $this->setQuery($query);
+        $this->setSimpleSelector($simpleSelector);
     }
     
 	/**
