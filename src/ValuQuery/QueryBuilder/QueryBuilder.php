@@ -9,6 +9,7 @@ use ValuQuery\QueryBuilder\Event\SimpleSelectorEvent;
 use ValuQuery\QueryBuilder\Event\SelectorEvent;
 use ArrayObject;
 use ValuQuery\QueryBuilder\Event\SequenceEvent;
+use ValuQuery\QueryBuilder\Exception\SelectorNotSupportedException;
 
 class QueryBuilder
 {
@@ -107,6 +108,20 @@ class QueryBuilder
         
         $args = new ArrayObject();
         $event = new SimpleSelectorEvent($simpleSelector, $query, $this, $args);
-        $evm->trigger($event);
+        $responses = $evm->trigger($event);
+        
+        if (!$responses->contains(true)) {
+            
+            foreach ($responses as $response) {
+                if ($response instanceof \Exception) {
+                    throw $response;
+                }
+            } 
+            
+            throw new SelectorNotSupportedException(
+                sprintf('%s selector is not supported', ucfirst($simpleSelector->getName()))
+            );
+        }
+        
     }
 }
