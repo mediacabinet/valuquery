@@ -1,5 +1,5 @@
 <?php
-namespace ValuQuery\MongoDb\Exception;
+namespace ValuQuery\QueryBuilder\Exception;
 
 use Exception;
 
