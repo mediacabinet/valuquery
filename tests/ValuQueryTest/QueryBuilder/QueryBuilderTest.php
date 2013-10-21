@@ -30,7 +30,7 @@ class QueryBuilderTest extends TestCase
         });
         
         $selector = $this->parseSelector('a > b');
-        $this->queryBuilder->build($selector);
+        $this->queryBuilder->build($selector, new \ArrayObject());
         $this->assertEquals(1, $triggered);
         $this->assertInstanceOf('ValuQuery\QueryBuilder\Event\SelectorEvent', $event);
         $this->assertSame($selector->getLastSequence(), $event->getParam('childSequence'));
@@ -48,9 +48,9 @@ class QueryBuilderTest extends TestCase
         });
         
         $selector = $this->parseSelector('a > b');
-        $this->queryBuilder->build($selector);
+        $this->queryBuilder->build($selector, new \ArrayObject());
         $this->assertEquals(1, $triggered);
-        $this->assertInstanceOf('ValuQuery\QueryBuilder\Event\SelectorEvent', $event);
+        $this->assertInstanceOf('ValuQuery\QueryBuilder\Event\QueryBuilderEvent', $event);
     }
     
     public function testBuildQuery()
@@ -72,6 +72,26 @@ class QueryBuilderTest extends TestCase
     }
     
     /**
+     * @expectedException ValuQuery\QueryBuilder\Exception\InvalidQueryException
+     */
+    public function testBuildQueryFailsWithQueryAsNonObject()
+    {
+        $this->queryBuilder->build($this->parseSelector('.videos'), '');
+    }
+    
+    /**
+     * @expectedException ValuQuery\QueryBuilder\Exception\InvalidQueryException
+     */
+    public function testBuildQueryFailsIfPrepareQueryInitializesNonObject()
+    {
+        $this->queryBuilder->getEventManager()->attach('prepareQuery', function($e) {
+            $e->setQuery('');
+        });
+        
+        $this->queryBuilder->build($this->parseSelector('.videos'));
+    }
+    
+    /**
      * @expectedException DomainException
      */
     public function testListenerResponseExceptionIsThrown()
@@ -86,7 +106,7 @@ class QueryBuilderTest extends TestCase
             return new \DomainException();
         });
         
-        $qb->build($this->parseSelector('a'));
+        $qb->build($this->parseSelector('a'), new \ArrayObject());
     }
     
     public function testListenerResponseExceptionIsNotThrownIfAnyResponseIsTruthful()
@@ -101,7 +121,7 @@ class QueryBuilderTest extends TestCase
             return true;
         });
     
-        $qb->build($this->parseSelector('a'));
+        $qb->build($this->parseSelector('a'), new \ArrayObject());
     }
 
     /**
@@ -110,7 +130,7 @@ class QueryBuilderTest extends TestCase
     public function testSelectorNotSupportedCausesException()
     {
         $qb = new QueryBuilder();
-        $qb->build($this->parseSelector('a'));
+        $qb->build($this->parseSelector('a'), new \ArrayObject());
     }
     
     protected function parseSelector($pattern)
