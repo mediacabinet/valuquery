@@ -3,7 +3,7 @@ namespace ValuQuery\QueryBuilder\Event;
 
 use Zend\EventManager\Event;
 
-abstract class AbstractEvent extends Event
+class QueryBuilderEvent extends Event
 {
     public function getQuery()
     {

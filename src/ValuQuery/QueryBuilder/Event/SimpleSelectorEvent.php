@@ -3,7 +3,7 @@ namespace ValuQuery\QueryBuilder\Event;
 
 use ValuQuery\Selector\SimpleSelector\SimpleSelectorInterface;
 
-class SimpleSelectorEvent extends AbstractEvent
+class SimpleSelectorEvent extends QueryBuilderEvent
 {
     
     /**

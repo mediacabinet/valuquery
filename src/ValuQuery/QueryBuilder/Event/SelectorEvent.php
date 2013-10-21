@@ -1,5 +1,5 @@
 <?php
 namespace ValuQuery\QueryBuilder\Event;
 
-class SelectorEvent extends AbstractEvent
+class SelectorEvent extends QueryBuilderEvent
 {}
