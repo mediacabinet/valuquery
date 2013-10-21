@@ -7,9 +7,10 @@ use ValuQuery\Selector\Sequence;
 use ValuQuery\Selector\SimpleSelector\SimpleSelectorInterface;
 use ValuQuery\QueryBuilder\Event\SimpleSelectorEvent;
 use ValuQuery\QueryBuilder\Event\SelectorEvent;
-use ArrayObject;
-use ValuQuery\QueryBuilder\Event\SequenceEvent;
+use ValuQuery\QueryBuilder\Event\QueryBuilderEvent;
 use ValuQuery\QueryBuilder\Exception\SelectorNotSupportedException;
+use ArrayObject;
+use ValuQuery\QueryBuilder\Exception\InvalidQueryException;
 
 class QueryBuilder
 {
@@ -22,12 +23,18 @@ class QueryBuilder
      * Build a new query based on given selector
      * 
      * @param Selector $selector
+     * @param object $query
+     * @return object $query
      */
     public function build(Selector $selector, $query = null)
     {
-        $event = new SelectorEvent('prepareQuery', $this);
+        $this->assertQueryIsValid($query, true);
+        
+        $event = new QueryBuilderEvent('prepareQuery', $this);
         $event->setQuery($query);
         $this->getEventManager()->trigger($event);
+        
+        $this->assertQueryIsValid($event->getQuery(), false);
         
         $this->buildSelector($selector, $event->getQuery());
         
@@ -131,5 +138,25 @@ class QueryBuilder
             );
         }
         
+    }
+    
+    /**
+     * Assert that query is valid
+     * 
+     * @param mixed $query
+     * @param boolean $acceptNull
+     * @throws InvalidQueryException
+     */
+    private function assertQueryIsValid($query, $acceptNull)
+    {
+        if ($query === null && $acceptNull) {
+            return;
+        }
+        
+        if (!is_object($query)) {
+            throw new InvalidQueryException(
+                sprintf('%s is not valid query container; object expected', gettype($query))
+            );
+        }
     }
 }
