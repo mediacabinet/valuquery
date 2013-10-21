@@ -23,9 +23,15 @@ class QueryBuilder
      * 
      * @param Selector $selector
      */
-    public function build(Selector $selector)
+    public function build(Selector $selector, $query = null)
     {
-        $this->buildSelector($selector);
+        $event = new SelectorEvent('prepareQuery', $this);
+        $event->setQuery($query);
+        $this->getEventManager()->trigger($event);
+        
+        $this->buildSelector($selector, $event->getQuery());
+        
+        return $event->getQuery();
     }
     
     /**
@@ -56,42 +62,43 @@ class QueryBuilder
      * Build selector
      * 
      * @param Selector $selector
+     * @param mixed $query
      */
-    protected function buildSelector(Selector $selector)
+    protected function buildSelector(Selector $selector, $query)
     {
-        $this->buildSequence($selector->getFirstSequence());
+        $this->buildSequence($selector->getFirstSequence(), $query);
     }
     
     /**
      * Build sequence
      * 
      * @param Sequence $sequence
+     * @param mixed $query
      */
-    protected function buildSequence(Sequence $sequence)
+    protected function buildSequence(Sequence $sequence, $query)
     {
         $childSequence = $sequence->getChildSequence();
         $combinator = $sequence->getChildCombinator();
         $evm = $this->getEventManager();
         
         if ($childSequence) {
-            $this->buildSequence($childSequence);
+            $this->buildSequence($childSequence, $query);
         }
-        
-        $event = new SequenceEvent('prepareSequence', $this);
-        $evm->trigger($event);
-        
+
         foreach ($sequence as $simpleSelector) {
-            $this->buildSimpleSelector($simpleSelector, $event->getQuery());
+            $this->buildSimpleSelector($simpleSelector, $query);
         }
         
-        $args = new ArrayObject([
-            'sequence'          => $sequence,
-            'childSequence'     => $childSequence,
-            'combinator'        => $combinator    
-        ]);
-        
-        $event = new SelectorEvent('combineSequence', $this, $args);
-        $evm->trigger($event);
+        if ($childSequence) {
+            $args = new ArrayObject([
+                'sequence'          => $sequence,
+                'childSequence'     => $childSequence
+            ]);
+            
+            $event = new SelectorEvent('combineSequence', $this, $args);
+            $event->setQuery($query);
+            $evm->trigger($event);
+        }
     }
     
     /**
@@ -108,6 +115,7 @@ class QueryBuilder
         
         $args = new ArrayObject();
         $event = new SimpleSelectorEvent($simpleSelector, $query, $this, $args);
+        $event->setQuery($query);
         $responses = $evm->trigger($event);
         
         if (!$responses->contains(true)) {
