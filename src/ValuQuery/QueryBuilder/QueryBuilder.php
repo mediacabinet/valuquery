@@ -34,9 +34,14 @@ class QueryBuilder
         $event->setQuery($query);
         $this->getEventManager()->trigger($event);
         
-        $this->assertQueryIsValid($event->getQuery(), false);
+        $query = $event->getQuery();
+        $this->assertQueryIsValid($query, false);
         
-        $this->buildSelector($selector, $event->getQuery());
+        $this->buildSelector($selector, $query);
+        
+        $event = new QueryBuilderEvent('finalizeQuery', $this);
+        $event->setQuery($query);
+        $this->getEventManager()->trigger($event);
         
         return $event->getQuery();
     }

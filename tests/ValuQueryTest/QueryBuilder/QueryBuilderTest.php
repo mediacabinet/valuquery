@@ -53,6 +53,20 @@ class QueryBuilderTest extends TestCase
         $this->assertInstanceOf('ValuQuery\QueryBuilder\Event\QueryBuilderEvent', $event);
     }
     
+    public function testBuildInvokesFinalizeQueryEvent()
+    {
+        $query = new \ArrayObject(['finalized' => false]);
+        
+        $this->queryBuilder->getEventManager()->attach('finalizeQuery', function($e) {
+            $q = $e->getQuery();
+            $q['finalized'] = true;
+        });
+        
+        $selector = $this->parseSelector('a > b');
+        $this->queryBuilder->build($selector, $query);
+        $this->assertTrue($query['finalized']);
+    }
+    
     public function testBuildQuery()
     {
         $this->queryBuilder->getEventManager()->attach('prepareQuery', function($e) {
