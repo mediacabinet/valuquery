@@ -2,14 +2,14 @@
 namespace ValuQuery\MongoDb;
 
 use ValuQuery\MongoDb\Exception;
+use ValuQuery\QueryBuilder\Event\SimpleSelectorEvent;
+use ValuQuery\QueryBuilder\Event\QueryBuilderEvent;
+use ValuQuery\Selector\SimpleSelector;
+use ValuQuery\Selector\SimpleSelector\Path;
 use Zend\EventManager\ListenerAggregateInterface;
 use Zend\EventManager\EventInterface;
 use Zend\EventManager\EventManagerInterface;
-use ValuQuery\QueryBuilder\Event\SimpleSelectorEvent;
-use ValuQuery\QueryBuilder\Event\SequenceEvent;
-use ValuQuery\Selector\SimpleSelector;
 use ArrayObject;
-use ValuQuery\Selector\SimpleSelector\Path;
 
 class QueryListener implements ListenerAggregateInterface
 {
@@ -54,10 +54,10 @@ class QueryListener implements ListenerAggregateInterface
     public function attach(EventManagerInterface $events)
     {
         $this->listeners[] = $events->attach(
-            'prepareSequence', 
+            'prepareQuery', 
             array(
                 $this,
-                'prepareSequence'
+                'prepareQuery'
             ));
         
         $this->listeners[] = $events->attach(
@@ -127,7 +127,7 @@ class QueryListener implements ListenerAggregateInterface
         }
     }
 
-    public function prepareSequence(SequenceEvent $event)
+    public function prepareQuery(QueryBuilderEvent $event)
     {
         $event->setQuery(
             new ArrayObject()

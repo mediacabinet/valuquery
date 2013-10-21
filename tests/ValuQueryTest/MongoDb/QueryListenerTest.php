@@ -4,8 +4,7 @@ namespace ValuQueryTest\MongoDb;
 use PHPUnit_Framework_TestCase as TestCase;
 use ValuQuery\MongoDb\QueryListener;
 use Zend\EventManager\EventManager;
-use ValuQuery\QueryBuilder\Event\SelectorEvent;
-use ValuQuery\QueryBuilder\Event\SequenceEvent;
+use ValuQuery\QueryBuilder\Event\QueryBuilderEvent;
 use ValuQuery\QueryBuilder\Event\SimpleSelectorEvent;
 use ValuQuery\Selector\SimpleSelector\Element;
 use ValuQuery\Selector\SimpleSelector\Id;
@@ -34,7 +33,7 @@ class QueryListenerTest extends TestCase
         
         $this->assertEquals(
             [
-                'prepareSequence', 
+                'prepareQuery', 
                 'combineSequence', 
                 'applyElementSelector', 
                 'applyIdSelector', 
@@ -57,10 +56,10 @@ class QueryListenerTest extends TestCase
         $this->assertEquals([], $evm->getEvents());
     }
     
-    public function testPrepareSequence()
+    public function testPrepareQuery()
     {
-        $event = new SequenceEvent();
-        $this->queryListener->prepareSequence($event);
+        $event = new QueryBuilderEvent();
+        $this->queryListener->prepareQuery($event);
         
         $this->assertInstanceOf('ArrayObject', $event->getQuery());
     }
