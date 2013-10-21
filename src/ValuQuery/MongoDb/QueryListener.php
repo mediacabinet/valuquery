@@ -10,6 +10,7 @@ use Zend\EventManager\ListenerAggregateInterface;
 use Zend\EventManager\EventInterface;
 use Zend\EventManager\EventManagerInterface;
 use ArrayObject;
+use ArrayAccess;
 
 class QueryListener implements ListenerAggregateInterface
 {
@@ -336,20 +337,19 @@ class QueryListener implements ListenerAggregateInterface
     /**
      * Apply query command
      * 
-     * @param ArrayObject $query    Query array
+     * @param ArrayAccess $query    Query array
      * @param string $field         Field name
      * @param string|null $command  Command name (leave null for 'is equal to' command)
      * @param mixed $value          Query value (condition)
      * @param boolean $append       Set true to append value to existing value array
      *                              if it has been previously set
-     *                                      
      */
-    protected function applyQueryCommand(ArrayObject $query, $field, $command, $value, $append = false)
+    protected function applyQueryCommand(ArrayAccess $query, $field, $command, $value, $append = false)
     {
         if (is_array($value)) {
-            $value = $this->filterArray($field, $value);
+            $value = $this->filterArray($query, $field, $value);
         } else {
-            $value  = $this->filterField($field, $value);
+            $value  = $this->filterField($query, $field, $value);
         }
         
         if ($command) {
@@ -371,14 +371,15 @@ class QueryListener implements ListenerAggregateInterface
     /**
      * Filter array of values for query
      * 
+     * @param ArrayAccess $query
      * @param string $field Field name
      * @param array $data   Data to filter
      * @return array        Filtered array
      */
-    protected function filterArray($field, array $data)
+    protected function filterArray(ArrayAccess $query, $field, array $data)
     {
         foreach ($data as $key => &$value) {
-            $data[$key] = $this->filterField($field, $value);
+            $data[$key] = $this->filterField($query, $field, $value);
         }
         
         return $data;
@@ -387,11 +388,12 @@ class QueryListener implements ListenerAggregateInterface
     /**
      * Filter value of field for query
      * 
+     * @param ArrayAccess $query
      * @param string $field     Field name
      * @param mixed $value      Value to filter
      * @return mixed            Filtered value
      */
-    protected function filterField($field, $value)
+    protected function filterField(ArrayAccess $query, $field, $value)
     {
         return $value;   
     }
