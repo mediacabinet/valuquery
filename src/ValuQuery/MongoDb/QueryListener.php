@@ -346,11 +346,7 @@ class QueryListener implements ListenerAggregateInterface
      */
     protected function applyQueryCommand(ArrayAccess $query, $field, $command, $value, $append = false)
     {
-        if (is_array($value)) {
-            $value = $this->filterArray($query, $field, $value);
-        } else {
-            $value  = $this->filterField($query, $field, $value);
-        }
+        $this->filterField($query, $field, $value);
         
         if ($command) {
             $cmd = $this->cmd.$command;
@@ -369,32 +365,12 @@ class QueryListener implements ListenerAggregateInterface
     }
     
     /**
-     * Filter array of values for query
-     * 
-     * @param ArrayAccess $query
-     * @param string $field Field name
-     * @param array $data   Data to filter
-     * @return array        Filtered array
-     */
-    protected function filterArray(ArrayAccess $query, $field, array $data)
-    {
-        foreach ($data as $key => &$value) {
-            $data[$key] = $this->filterField($query, $field, $value);
-        }
-        
-        return $data;
-    }
-    
-    /**
      * Filter value of field for query
      * 
      * @param ArrayAccess $query
      * @param string $field     Field name
      * @param mixed $value      Value to filter
-     * @return mixed            Filtered value
      */
-    protected function filterField(ArrayAccess $query, $field, $value)
-    {
-        return $value;   
-    }
+    protected function filterField(ArrayAccess $query, &$field, &$value)
+    {}
 }
