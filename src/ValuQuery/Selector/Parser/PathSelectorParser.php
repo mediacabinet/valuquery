@@ -42,9 +42,9 @@ class PathSelectorParser extends AbstractParser
             SimpleSelector\Role::getEnclosure()
         );
         
-        // Parse first item as a child selector
+        // Parse first item as a child simple selector
         if(in_array($this->current(), $enclosures)){
-            $parser = new SelectorParser();
+            $parser = new SimpleSelectorParser();
             $items[0] = $parser->parse($items[0]);
         }
         
