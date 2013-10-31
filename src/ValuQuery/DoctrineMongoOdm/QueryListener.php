@@ -5,7 +5,6 @@ use ValuQuery\QueryBuilder\Event\SimpleSelectorEvent;
 use ValuQuery\QueryBuilder\Event\QueryBuilderEvent;
 use ValuQuery\MongoDb\QueryListener as BaseListener;
 use ValuQuery\Selector\SimpleSelector;
-use ValuQuery\Selector\Selector;
 use Doctrine\ODM\MongoDB\Types\Type;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\Common\Persistence\Mapping\ClassMetadata;
