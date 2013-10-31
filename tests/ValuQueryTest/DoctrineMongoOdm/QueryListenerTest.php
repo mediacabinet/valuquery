@@ -20,6 +20,8 @@ use ValuQuery\Selector\SimpleSelector\Id;
 use ValuQuery\Selector\SimpleSelector\Role;
 use ValuQueryTest\TestAsset\Category;
 use Zend\EventManager\EventManager;
+use ValuQuery\Selector\Parser\SelectorParser;
+use ValuQuery\QueryBuilder\QueryBuilder;
 
 class QueryListenerTest extends TestCase
 {
@@ -261,6 +263,48 @@ class QueryListenerTest extends TestCase
             ['head.replacable' => false],
             'head.replacable', Attribute::OPERATOR_EQUALS, false
         );
+    }
+    
+    public function testBuildQuery()
+    {
+        $qb = new QueryBuilder();
+        $qb->getEventManager()->attach($this->queryListener);
+        
+        $selector = SelectorParser::parseSelector('dog#526fa3a24c1680730b000000.long-hair.black[maxAge>12]');
+        $query = $qb->build($selector);
+        
+        $this->assertEquals([
+            'type' => 'dog',
+            '_id' => '526fa3a24c1680730b000000',
+            'classes' => ['$in' => ['long-hair', 'black']],
+            'maxAge' => ['$gt' => 12]
+        ], $query['query']);
+    }
+    
+    public function testBuildPathQuery()
+    {
+        $category = new Category();
+        $category->path = '/Animals';
+        $category->roles = ['animals'];
+        
+        $dm = $this->queryListener->getDocumentManager();
+        $dm->persist($category);
+        $dm->flush();
+        
+        $queryListener = new QueryListener($this->queryListener->getDocumentManager(), 'ValuQueryTest\TestAsset\Category');
+        
+        $category = new Category();
+        $category->path = '/Animals/Dogs and cats/Height > Length';
+        
+        $qb = new QueryBuilder();
+        $qb->getEventManager()->attach($queryListener);
+        
+        $selector = SelectorParser::parseSelector('/$animals/Docs\\ and\\ cats/Height\\ \\>\\ Length/*');
+        $query = $qb->build($selector);
+        
+        $this->assertEquals([
+            'path' => ['$regex' => '^/Animals/Docs and cats/Height \> Length/.*$'],
+        ], $query['query']);
     }
     
     private function assertAttributeQueryEquals($expected, $field, $operator, $condition)
