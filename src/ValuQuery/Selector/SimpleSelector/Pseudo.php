@@ -25,8 +25,6 @@ class Pseudo extends AbstractSelector
     {
         $this->setClassName($className);
         $this->setClassValue($classValue);
-        
-        parent::__construct($this->getRawValue());
     }
     
     public function getClassName()
@@ -57,19 +55,15 @@ class Pseudo extends AbstractSelector
         $this->classValue = $classValue;
     }
     
-    public function getRawValue(){
+    public function getEscapedValue(){
         
-        if($this->value === null){
-            $selector = $this->getClassName();
+        $selector = $this->getClassName();
             
-            if($this->getClassValue()){
-                $selector .= '(' . $this->getClassValue() . ')';
-            }
-            
-            $this->value = $selector;
+        if($this->getClassValue()){
+            $selector .= '(' . $this->getClassValue() . ')';
         }
         
-        return parent::getRawValue();
+        return $selector;
     }
 
 	public static function getEnclosure()

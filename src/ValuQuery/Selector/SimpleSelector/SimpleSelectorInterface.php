@@ -3,10 +3,6 @@ namespace ValuQuery\Selector\SimpleSelector;
 
 interface SimpleSelectorInterface
 {
-    const ACCEPT_ALL = 'all';
-    
-    const ACCEPT_NONE = 'none';
-    
     /**
      * Retrieve selector name
      * 
@@ -15,18 +11,11 @@ interface SimpleSelectorInterface
     public function getName();
     
     /**
-     * Retrieve selector value
-     *
-     * @return string
-     */
-    public function getValue();
-    
-    /**
      * Retrieve raw selector value
      *
      * @return string
      */
-    public function getRawValue();
+    public function getEscapedValue();
     
     /**
      * Retrieve selector pattern

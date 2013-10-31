@@ -13,9 +13,8 @@ class Role extends Attribute
         parent::__construct('role', Attribute::OPERATOR_EQUALS, $value);
     }
     
-    public function getPattern(){
-        $enclosure = self::getEnclosure();
-        return array_pop($enclosure) . $this->getCondition();
+    public function getEscapedValue(){
+        return $this->getCondition();
     }
     
     public static function getEnclosure()

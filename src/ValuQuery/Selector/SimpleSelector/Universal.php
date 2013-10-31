@@ -7,10 +7,11 @@ class Universal extends AbstractSelector
 {
     protected $name = AbstractSelector::SELECTOR_UNIVERSAL;
     
-    public function __construct(){
-        parent::__construct('');
+    public function getEscapedValue()
+    {
+        return '';
     }
-    
+
     public static function getEnclosure()
     {
         return array('*');

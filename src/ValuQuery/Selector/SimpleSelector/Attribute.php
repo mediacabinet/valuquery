@@ -127,7 +127,7 @@ class Attribute extends AbstractSelector
         return $this;
     }
     
-    public function getRawValue()
+    public function getEscapedValue()
     {
         if($this->value == null){
             if($this->getOperator()){
@@ -135,7 +135,7 @@ class Attribute extends AbstractSelector
                 $condition = $this->getCondition();
                 
                 if(is_string($condition)){
-                    $condition = '"'.addslashes($condition).'"';
+                    $condition = '"'.self::escapeCondition($condition).'"';
                 }
             
                 $this->value = $this->getAttribute() . $this->getOperator() . $condition;
@@ -160,5 +160,16 @@ class Attribute extends AbstractSelector
     public static function getEnclosure()
     {
         return array('[', ']');
+    }
+    
+    /**
+     * Escape condition value for attribute selector
+     * 
+     * @param string $condition
+     * @return string Escaped value
+     */
+    public static function escapeCondition($condition)
+    {
+        return str_replace('"', '\\"', $condition);
     }
 }

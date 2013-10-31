@@ -34,23 +34,11 @@ abstract class AbstractSelector
     protected $name;
 
     /**
-     * Selector value
-     *
-     * @var string
-     */
-    protected $value = null;
-
-    /**
      * Selector pattern
      *
      * @var string
      */
     protected $pattern = null;
-
-    public function __construct($value)
-    {
-        $this->value = $value;
-    }
 
     /**
      * Retrieve complete simple selector pattern
@@ -64,10 +52,10 @@ abstract class AbstractSelector
             $enclosure = call_user_func($class . '::getEnclosure');
             
             if (sizeof($enclosure) > 1) {
-                $this->pattern = $enclosure[0] . $this->getRawValue() .
+                $this->pattern = $enclosure[0] . $this->getEscapedValue() .
                          $enclosure[1];
             } else {
-                $this->pattern = $enclosure[0] . $this->getRawValue();
+                $this->pattern = $enclosure[0] . $this->getEscapedValue();
             }
         }
         
@@ -82,25 +70,6 @@ abstract class AbstractSelector
     public function getName()
     {
         return $this->name;
-    }
-
-    /**
-     * Retrieve simple selector value
-     *
-     * @return string
-     */
-    public function getValue()
-    {
-        return $this->getRawValue();
-    }
-    
-    /**
-     * (non-PHPdoc)
-     * @see \ValuQuery\Selector\SimpleSelector\SimpleSelectorInterface::getRawValue()
-     */
-    public function getRawValue()
-    {
-        return $this->value;
     }
 
     public function __toString()

@@ -14,10 +14,9 @@ class Id extends Attribute
         parent::__construct('id', Attribute::OPERATOR_EQUALS, $value);
     }
 
-    public function getPattern()
+    public function getEscapedValue()
     {
-        $enclosure = self::getEnclosure();
-        return array_pop($enclosure) . $this->getCondition();
+        return $this->getCondition();
     }
 
     public static function getEnclosure()
