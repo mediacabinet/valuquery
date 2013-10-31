@@ -13,7 +13,8 @@
 		"BSD-3-Clause"
 	],
 	"require" : {
-		"php" : ">=5.4.0"
+		"php" : ">=5.4.0",
+		"zendframework/zendframework" : ">=2.0"
 	},
 	"require-dev" : {
 		"doctrine/doctrine-mongo-odm-module" : "dev-master"
