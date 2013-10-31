@@ -75,7 +75,7 @@ class QueryBuilderTest extends TestCase
         
         $this->queryBuilder->getEventManager()->attach('applyElementSelector', function($e) {
             $q = $e->getQuery();
-            $q['vehicle'] = $e->getSimpleSelector()->getValue();
+            $q['vehicle'] = $e->getSimpleSelector()->getElement();
         });
         
         $selector = $this->parseSelector('car');
