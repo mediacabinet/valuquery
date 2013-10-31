@@ -1,5 +1,5 @@
 <?php
-namespace ValuQueryTest\Selector;
+namespace ValuQueryTest\Selector\Parser;
 
 use ValuQuery\Selector;
 use ValuQuery\Selector\SimpleSelector\AbstractSelector;
@@ -11,6 +11,7 @@ class SelectorParserTest extends \PHPUnit_Framework_TestCase{
     }
     
     public function testElementSelector(){
+        
         $name = AbstractSelector::SELECTOR_ELEMENT;
         
         $this->assertSelectorName('a', $name);
@@ -51,16 +52,6 @@ class SelectorParserTest extends \PHPUnit_Framework_TestCase{
         
         $this->assertSelectorName('.ab', $name);
         $this->assertSelector('.ab');
-    }
-    
-    public function testPathSelector(){
-        $name = AbstractSelector::SELECTOR_PATH;
-    
-        $this->assertSelectorName('/path', $name);
-        $this->assertSelector('/path');
-    
-        $this->assertSelectorName('/path/to.me', $name);
-        $this->assertSelector('/path/to.me');
     }
     
     public function testPseudoSelector(){

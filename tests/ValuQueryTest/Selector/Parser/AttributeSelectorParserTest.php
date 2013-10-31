@@ -1,9 +1,11 @@
 <?php
-namespace ValuQueryTest\Selector;
+namespace ValuQueryTest\Selector\Parser;
 
 use ValuQuery\Selector\Parser\AttributeSelectorParser;
 
-class AttributeSelectorParserTest extends \PHPUnit_Framework_TestCase{
+class AttributeSelectorParserTest 
+    extends AbstractParserTestCase
+{
     
     public static function setUpBeforeClass()
     {
@@ -116,7 +118,7 @@ class AttributeSelectorParserTest extends \PHPUnit_Framework_TestCase{
     }
     
     /**
-     * Assert that parsed pattern matches with given
+     * Assert that parsed pattern matches with expected
      *
      * @param string $value
      * @param string|null $expected

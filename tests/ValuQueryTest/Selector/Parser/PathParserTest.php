@@ -33,6 +33,14 @@ class PathParserTest
         $this->parser = null;
         parent::tearDown();
     }
+    
+    public function testParse()
+    {
+        $selector = $this->parser->parse('path/to');
+        
+        $this->assertInstanceOf('ValuQuery\Selector\SimpleSelector\Path', $selector);
+        $this->assertEquals('path/to', $selector->getPath());
+    }
 
     /**
      * Tests PathParser->parse()
