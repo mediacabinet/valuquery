@@ -1,5 +1,5 @@
 <?php
-namespace ValuQueryTest\MongoDb;
+namespace ValuQueryTest\QueryBuilder;
 
 use PHPUnit_Framework_TestCase as TestCase;
 use ValuQuery\QueryBuilder\QueryBuilder;
