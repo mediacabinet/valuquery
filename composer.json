@@ -15,6 +15,9 @@
 	"require" : {
 		"php" : ">=5.4.0"
 	},
+	"require-dev" : {
+		"doctrine/doctrine-mongo-odm-module" : "dev-master"
+	},
 	"autoload" : {
 		"psr-0" : {
 			"ValuQueryTest\\" : "tests/",

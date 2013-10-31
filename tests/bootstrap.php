@@ -4,10 +4,9 @@
 */
 error_reporting( E_ALL | E_STRICT );
 
-ini_set('display_errors', 1);
-
-$applicationRoot = __DIR__ . '/../../../../';
-chdir($applicationRoot);
-
 // Setup autoloading
-include __DIR__ . '/_autoload.php';
+if (!($loader = @include_once __DIR__ . '/../vendor/autoload.php')) {
+    throw new RuntimeException('vendor/autoload.php could not be found. Did you run `php composer.phar install`?');
+}
+
+$loader->add('ValuQueryTest', __DIR__);
