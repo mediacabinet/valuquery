@@ -185,12 +185,12 @@ class Sequence implements \Iterator
 
     public function popItem()
     {
-        return array_pop($this->items);
+        return sizeof($this->items) ? array_pop($this->items) : null;
     }
 
     public function shiftItem()
     {
-        return array_shift($this->items);
+        return sizeof($this->items) ? array_shift($this->items) : null;
     }
 
     /**
