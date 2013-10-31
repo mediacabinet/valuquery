@@ -47,7 +47,7 @@ class PathParserTest
      */
     public function testParseBasicPath()
     {
-        $this->assertPattern('/path/to');
+        $this->assertPattern('path/to');
     }
     
     public function testParseEmptyPath()
@@ -57,12 +57,12 @@ class PathParserTest
     
     public function testParsePathWithEscapedCharacters()
     {
-        $this->assertPattern('/path\\ is\\ \\>\\ road\\:\\~\\[impossible]');
+        $this->assertPattern('path\\ is\\ \\>\\ road\\:\\~\\[impossible]');
     }
     
     public function testParsePathWithIdChildSelector()
     {
-        $selector = $this->parser->parse('/#id/to');
+        $selector = $this->parser->parse('#id/to');
         
         $this->assertInstanceOf('\ValuQuery\Selector\SimpleSelector\Id', $selector->getRootSelector());
         $items = $selector->getPathItems();
@@ -76,7 +76,7 @@ class PathParserTest
      * @param string|null $expected
      */
     protected function assertPattern($pattern, $expected = null){
-        if(is_null($expected)) $expected = $pattern;
+        if(is_null($expected)) $expected = '/'.$pattern;
     
         $selector = $this->parser->parse($pattern);
         $this->assertEquals($expected, $selector->__toString());
