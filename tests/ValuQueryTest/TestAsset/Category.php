@@ -32,4 +32,12 @@ class Category{
 	 * @var string
 	 */
 	public $path;
+	
+	/**
+	 * Classes
+	 *
+	 * @ODM\Collection
+	 * @param array
+	 */
+	public $roles = array();
 }
