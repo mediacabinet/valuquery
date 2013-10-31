@@ -23,5 +23,6 @@
 			"ValuQueryTest\\" : "tests/",
 			"ValuQuery\\" : "src/"
 		}
-	}
+	},
+	"minimum-stability" : "alpha"
 }
