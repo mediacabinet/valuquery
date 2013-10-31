@@ -118,7 +118,11 @@ class Sequence implements \Iterator
      */
     public function getElement()
     {
-        return ($this->items[0] instanceof Element) ? $this->items[0]->getValue() : null;
+        if (sizeof($this->items) && $this->items[0] instanceof Element) {
+            return $this->items[0]->getElement();
+        } else {
+            return null;
+        }
     }
 
     /**
