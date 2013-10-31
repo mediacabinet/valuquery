@@ -13,7 +13,8 @@ class Role extends Attribute
         parent::__construct('role', Attribute::OPERATOR_EQUALS, $value);
     }
     
-    public function getEscapedValue(){
+    public function getEscapedValue()
+    {
         return $this->getCondition();
     }
     

@@ -19,7 +19,8 @@ class Sort extends Pseudo
      */
     protected $order = null;
     
-    public function __construct($attribute, $order){
+    public function __construct($attribute, $order)
+    {
         $this->setAttribute($attribute);
         $this->setOrder($order);
         
@@ -43,7 +44,7 @@ class Sort extends Pseudo
      */
 	public function setAttribute($attribute)
     {
-        if($attribute !== $this->attribute && $this->attribute !== null){
+        if ($attribute !== $this->attribute && $this->attribute !== null) {
             $this->classValue = null;
         }
         
@@ -76,7 +77,7 @@ class Sort extends Pseudo
      */
 	public function setOrder($order)
     {
-        if($order !== $this->order && $this->order !== null){
+        if ($order !== $this->order && $this->order !== null) {
             $this->classValue = null;
         }
         
@@ -89,7 +90,7 @@ class Sort extends Pseudo
      */
     public function getClassValue()
     {
-        if(parent::getClassValue() == null){
+        if (parent::getClassValue() == null) {
             $this->setClassValue($this->makeClassValue());
         }
         

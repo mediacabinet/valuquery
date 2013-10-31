@@ -34,14 +34,15 @@ class AttributeSelectorParser extends AbstractParser
      * 
      * @param string $pattern
      */
-    public function parse($pattern){
+    public function parse($pattern)
+    {
         
         $this->setPattern($pattern);
         
         // Parse attribute and advance
-        if($this->parseAttribute() && $this->valid()){
+        if ($this->parseAttribute() && $this->valid()) {
             
-            if($this->parseOperator() && $this->valid()){
+            if ($this->parseOperator() && $this->valid()) {
                 // Parse value
                 $this->parseValue();
             }
@@ -60,7 +61,8 @@ class AttributeSelectorParser extends AbstractParser
      * (non-PHPdoc)
      * @see ValuQuery\Selector\Parser.Parser::setPattern()
      */
-    protected function setPattern($pattern){
+    protected function setPattern($pattern)
+    {
         parent::setPattern($pattern);
         
         $this->attribute = null;
@@ -90,7 +92,7 @@ class AttributeSelectorParser extends AbstractParser
             $this->key()+1
         );
         
-        if($operatorPosition == false){
+        if ($operatorPosition == false) {
             $operatorPosition = $this->length;
         }
         
@@ -116,20 +118,18 @@ class AttributeSelectorParser extends AbstractParser
         
         $supportedOperators = Attribute::getSupportedOperators();
 
-        if(in_array($this->current(), $supportedOperators)){
+        if (in_array($this->current(), $supportedOperators)) {
             $operator = $this->current();
             $this->next();
-        }
-        else{
+        } else {
             $operator = $this->current();
             $this->next();
         }
         
-        if($this->current() == Attribute::OPERATOR_EQUALS){
+        if ($this->current() == Attribute::OPERATOR_EQUALS) {
             $operator .= $this->current();
             $this->next();
-        }
-        else if(!in_array($operator, $supportedOperators)){
+        } else if(!in_array($operator, $supportedOperators)) {
             throw new \Exception(sprintf('Invalid operator "%s" provided for pattern "%s"', $operator, $this->pattern));
         }
         
@@ -144,17 +144,21 @@ class AttributeSelectorParser extends AbstractParser
      *
      * @return string|false
      */
-    protected function parseValue(){
+    protected function parseValue()
+    {
         
         $cursor = $this->seekKeyCursorLocation(true, $this->key());
         $quoted = false;
         
         // Update cursor position to next key location
-        if($cursor === false) return false;
-        else $this->cursor = $cursor;
+        if($cursor === false) {
+            return false;
+        } else {
+            $this->cursor = $cursor;
+        }
         
         // Find value withing quotes
-        if($this->cursorAtQuote()){
+        if ($this->cursorAtQuote()) {
             $quoted = true;
             $quote = $this->current();
             $this->next();
@@ -167,9 +171,8 @@ class AttributeSelectorParser extends AbstractParser
             else{
                 $valueLast--;
             }
-        }
-        // Value not enclosed in quotes, fetch everything
-        else{
+        } else { 
+            // Value not enclosed in quotes, fetch everything
             // Seek backwards, starting from the end of string
             $valueLast = $this->seekKeyCursorLocation(false, $this->length-1);
         }
@@ -183,19 +186,20 @@ class AttributeSelectorParser extends AbstractParser
         
         // Convert some special strings to corresponding
         // primitive types
-        if(!$quoted){
-            if($value == 'true' || $value == 'TRUE'){
+        if (!$quoted) {
+            $canonicalValue = strtolower($value);
+            if ($canonicalValue === 'true') {
                 $value = true;
-            }
-            else if($value == 'false' || $value == 'FALSE'){
+            } else if($canonicalValue === 'false') {
                 $value = false;
-            }
-            else if($value == 'null' || $value == 'NULL'){
+            } else if($canonicalValue === 'null') {
                 $value = null;
-            }
-            else if(is_numeric($value)){
-                if(strstr($value, '.') == false) $value = intval($value);
-                else $value = floatval($value);
+            } else if(is_numeric($value)) {
+                if(strstr($value, '.') == false) {
+                    $value = intval($value);
+                } else {
+                    $value = floatval($value);
+                }
             }
         }
         

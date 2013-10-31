@@ -43,7 +43,8 @@ class Path extends AbstractSelector
         return implode(self::PATH_SEPARATOR, $components);
     }
     
-    public function getEscapedValue(){
+    public function getEscapedValue()
+    {
         $components = array_map('strval', $this->items);
         $components = array_map('\ValuQuery\Selector\SimpleSelector\Path::escapePathComponent', $components);
         

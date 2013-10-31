@@ -47,7 +47,8 @@ abstract class AbstractParser implements \Iterator
      * (non-PHPdoc)
      * @see Iterator::next()
      */
-    public function next() {
+    public function next() 
+    {
         ++$this->cursor;
     }
     
@@ -56,14 +57,14 @@ abstract class AbstractParser implements \Iterator
      * 
      * @return boolean
      */
-    public function nextKeyChar(){
+    public function nextKeyChar()
+    {
         $newCursor = $this->seekKeyCursorLocation(true, $this->key()+1);
         
-        if($newCursor !== false){
+        if ($newCursor !== false) {
             $this->cursor = $newCursor;
             return true;
-        }
-        else{
+        } else {
             return false;
         }
     }
@@ -80,7 +81,8 @@ abstract class AbstractParser implements \Iterator
      * (non-PHPdoc)
      * @see Iterator::valid()
      */
-    public function valid() {
+    public function valid()
+    {
         return isset($this->pattern[$this->cursor]);
     }
     
@@ -129,9 +131,9 @@ abstract class AbstractParser implements \Iterator
      * @param int $offset
      * @param boolean $findEscaped
      */
-    protected function findAny(array $characters, $offset = null, $findEscaped = false){
-    
-        if(is_null($offset)){
+    protected function findAny(array $characters, $offset = null, $findEscaped = false)
+    {
+        if (is_null($offset)) {
             $offset = $this->key();
         }
         
@@ -143,10 +145,10 @@ abstract class AbstractParser implements \Iterator
         
         $foundOffset = false;
     
-        while($this->valid()){
+        while ($this->valid()) {
             
             // Test if current character matches
-            if(in_array($this->current(), $characters)){
+            if (in_array($this->current(), $characters)) {
                 
                 // Test if escaped
                 $escaped = $this->currentIsEscaped();
@@ -158,7 +160,7 @@ abstract class AbstractParser implements \Iterator
             }
             
             // Skip if inside a quoted string
-            if($this->cursorAtStartEncloser() && !$this->currentIsEscaped()){
+            if ($this->cursorAtStartEncloser() && !$this->currentIsEscaped()) {
                 
                 //find ending encloser
                 $newOffset = $this->findChar($this->enclosers[$this->current()], ($this->key()+1));
@@ -184,24 +186,22 @@ abstract class AbstractParser implements \Iterator
      * @param boolean $moveForward
      * @param int $offset Start offset
      */
-    protected function seekKeyCursorLocation($moveForward = true, $offset = null){
-        
+    protected function seekKeyCursorLocation($moveForward = true, $offset = null)
+    {
         $location       = false;
         $cursor         = $this->cursor;
         
-        if(is_null($offset)){
+        if (is_null($offset)) {
             $offset = $this->key();
-        }
-        else{
+        } else {
             $this->cursor = $offset;
         }
     
-        while($this->valid()){
-            if($this->cursorAtWhitespace()){
+        while ($this->valid()) {
+            if ($this->cursorAtWhitespace()) {
                 if($moveForward) $this->next();
                 else $this->prev();
-            }
-            else{
+            } else {
                 $location = $this->key();
                 break;
             }
@@ -217,18 +217,18 @@ abstract class AbstractParser implements \Iterator
      * 
      * @return boolean
      */
-    protected function currentIsEscaped(){
+    protected function currentIsEscaped()
+    {
+        if (!isset($this->escaped[$this->key()])) {
         
-        if(!isset($this->escaped[$this->key()])){
-        
-            if($this->key() == 0){
+            if ($this->key() == 0) {
                 return false;
             }
             
             $escaped = false;
             
             $this->prev();
-            if($this->cursorAtEscape() && !$this->currentIsEscaped()){
+            if ($this->cursorAtEscape() && !$this->currentIsEscaped()) {
                 $escaped = true;
             }
             $this->next();
@@ -244,7 +244,8 @@ abstract class AbstractParser implements \Iterator
      * 
      * @return boolean
      */
-    protected function cursorAtQuote(){
+    protected function cursorAtQuote()
+    {
         return in_array($this->current(), array("'", '"'));
     }
     
@@ -254,7 +255,8 @@ abstract class AbstractParser implements \Iterator
      *
      * @return boolean
      */
-    protected function cursorAtStartEncloser(){
+    protected function cursorAtStartEncloser()
+    {
         return isset($this->enclosers[$this->current()]);
     }
     
@@ -264,7 +266,8 @@ abstract class AbstractParser implements \Iterator
      *
      * @return boolean
      */
-    protected function cursorAtEndEncloser(){
+    protected function cursorAtEndEncloser()
+    {
         return in_array($this->current(), $this->enclosers);
     }
     
@@ -273,7 +276,8 @@ abstract class AbstractParser implements \Iterator
      * 
      * @return boolean
      */
-    protected function cursorAtEscape(){
+    protected function cursorAtEscape()
+    {
         return ($this->current() == "\\");
     }
     
@@ -289,7 +293,10 @@ abstract class AbstractParser implements \Iterator
      * 
      * @return boolean
      */
-    protected function cursorAtWhitespace(){
-        return preg_match('/\x{0020}|\x{0009}|\x{000A}|\x{000D}|\x{000C}/u', $this->current());
+    protected function cursorAtWhitespace()
+    {
+        return preg_match(
+            '/\x{0020}|\x{0009}|\x{000A}|\x{000D}|\x{000C}/u', 
+            $this->current());
     }
 }

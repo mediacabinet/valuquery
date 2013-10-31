@@ -47,17 +47,6 @@ class Sequence implements \Iterator
      */
     public function appendSimpleSelector(SimpleSelectorInterface $simpleSelector)
     {
-        
-        /**
-         * Prepend Universal selector if no Element or Universal
-         * selector is applied
-         */
-        /*
-         * if( !sizeof($this->items) && !($simpleSelector instanceof Universal)
-         * && !($simpleSelector instanceof Element)){ $universal = new
-         * Universal(); $this->appendSimpleSelector($universal); }
-         */
-        
         /**
          * Ensure that Universal and Element selectors are allowed
          * to appear only in the beginning of the sequence

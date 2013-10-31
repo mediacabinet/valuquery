@@ -46,7 +46,8 @@ class SimpleSelectorParser extends AbstractParser
      * @param string $pattern
      * @return SimpleSelector|null
      */
-    public function parse($pattern){
+    public function parse($pattern)
+    {
         $this->setPattern($pattern);
         
         $selector    = null;
@@ -54,7 +55,7 @@ class SimpleSelectorParser extends AbstractParser
         $match       = null;
         $value       = null;
         
-        foreach ($enclosures as $class => $enclosure){
+        foreach ($enclosures as $class => $enclosure) {
             
             /**
              * Match any word character for empty enclosure
@@ -63,22 +64,14 @@ class SimpleSelectorParser extends AbstractParser
                 $match = $class;
                 $value = $pattern;
                 break;
-            }
-            /**
-             * Match first character against enclosure
-             */
-            else if(sizeof($enclosure) == 1 && $this->current() == $enclosure[0]){
+            } else if(sizeof($enclosure) == 1 && $this->current() == $enclosure[0]){
                 $match = $class;
                 $value = substr($this->pattern, 1);
                 break;
-            }
-            /**
-             * Match first and last character against enclosure
-             */
-            else if(sizeof($enclosure) > 1){
+            } else if(sizeof($enclosure) > 1){
                 $endPosition = $this->findChar($enclosure[1], $this->length-1);
                 
-                if($this->current() == $enclosure[0] && $endPosition !== false){
+                if ($this->current() == $enclosure[0] && $endPosition !== false) {
                     $match = $class;
                     $value = substr($this->pattern, 1, -1);
                     break;
@@ -87,19 +80,13 @@ class SimpleSelectorParser extends AbstractParser
         }
         
         if($match){
-            
             /**
              * Use selector parser if defined
              */
-            if(isset($this->parsers[$match])){
+            if (isset($this->parsers[$match])) {
                 $parser = new $this->parsers[$match]();
                 $selector = $parser->parse($value);
-            }
-            /**
-             * No parsing required, create a new selector
-             * instance
-             */
-            else{
+            } else {
                 $class    = '\\' . $match;
                 $selector = new $class($this->unescape($value));
             }
@@ -110,10 +97,10 @@ class SimpleSelectorParser extends AbstractParser
     
     public function getSelectorEnclosures()
     {
-        if(is_null($this->enclosures)){
+        if (is_null($this->enclosures)) {
             $this->enclosures = array();
             
-            foreach($this->selectors as $class){
+            foreach ($this->selectors as $class) {
                 $enclosure = call_user_func('\\'.$class.'::getEnclosure');
                 if(!is_array($enclosure)) $enclosure = array($enclosure);
                 

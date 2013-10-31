@@ -53,7 +53,7 @@ class PathParser extends AbstractParser
         
         // Parse first item as a child simple selector
         $this->next();
-        if(in_array($this->current(), $childSelectorEnclosures)){
+        if (in_array($this->current(), $childSelectorEnclosures)) {
             $parser = new SimpleSelectorParser();
             $items[0] = $parser->parse($items[0]);
         }

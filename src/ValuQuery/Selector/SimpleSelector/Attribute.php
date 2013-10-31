@@ -50,8 +50,8 @@ class Attribute extends AbstractSelector
         Attribute::OPERATOR_LESS_THAN_OR_EQUAL,
     );
     
-    public function __construct($attribute, $operator = null, $condition = null){
-    
+    public function __construct($attribute, $operator = null, $condition = null)
+    {
         if(!$attribute || !is_string($attribute)){
             throw new \InvalidArgumentException('Attribute must be a non-empty string');
         }
@@ -153,7 +153,8 @@ class Attribute extends AbstractSelector
      * 
      * @return array
      */
-    public static function getSupportedOperators(){
+    public static function getSupportedOperators()
+    {
         return self::$operators;
     }
     

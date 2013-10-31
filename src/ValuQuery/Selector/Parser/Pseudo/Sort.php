@@ -12,8 +12,8 @@ class Sort extends AbstractParser
      *
      * @param string $pattern
      */
-    public function parse($pattern){
-        
+    public function parse($pattern)
+    {
         $this->setPattern($pattern);
         
         // Split by whitespace
@@ -22,26 +22,26 @@ class Sort extends AbstractParser
         $attribute = null;
         $order = 'asc';
         
-        foreach($specs as $value){
+        foreach ($specs as $value) {
             
-            if($value == ' '){
+            if ($value == ' ') {
                 continue;
             }
             
             // Attribute name
-            if($attribute === null){
+            if ($attribute === null) {
                 $attribute = trim($value, '"');
                 continue;
             }
             
             // Sort order
-            if($attribute !== null){
+            if ($attribute !== null) {
                 $order = strtolower($value);
                 break;
             }
         }
         
-        if(!in_array($order, array('asc', 'desc'))){
+        if (!in_array($order, array('asc', 'desc'))) {
             throw new \Exception('Invalid sort order, asc or desc expected');
         }
         

@@ -32,26 +32,28 @@ class Selector
      * 
      * @return Selector
      */
-    public function appendSequence(Sequence $sequence, $combinator){
+    public function appendSequence(Sequence $sequence, $combinator)
+    {
         
-        if(!in_array($combinator, array_keys(self::$combinatorChars)) && $combinator !== null){
+        if (!in_array($combinator, array_keys(self::$combinatorChars)) 
+            && $combinator !== null) {
             throw new \InvalidArgumentException('Invalid combinator specified: '.$combinator);
         }
         
-        if($this->sequence && $combinator == null){
+        if ($this->sequence && $combinator == null) {
             throw new \Exception("Combinator must be defined");
         }
-        else if(!$this->sequence && $combinator !== null){
+        else if (!$this->sequence && $combinator !== null) {
             throw new \Exception("Combinator must be null for the first sequence");
         }
         
         /**
          * Set root sequence
          */
-        if(!$this->sequence){
+        if (!$this->sequence) {
             $this->sequence = $sequence;
         }
-        else{
+        else {
             $this->getLastSequence()
                 ->setChildSequence($sequence)
                 ->setChildCombinator($combinator);
@@ -71,21 +73,20 @@ class Selector
      */
     public function getSequencePath()
     {
-        $path     = array();
+        $path = array();
         $sequence = $this->sequence;
         
-        if(!$this->sequence){
+        if (! $this->sequence) {
             return array();
         }
         
-        do{
+        do {
             $path[] = $sequence;
             
-            if($sequence->getChildCombinator()){
-                $path[] = $sequence->getChildCombinator(); 
+            if ($sequence->getChildCombinator()) {
+                $path[] = $sequence->getChildCombinator();
             }
-        }
-        while(($sequence = $sequence->getChildSequence()) !== null);
+        } while (($sequence = $sequence->getChildSequence()) !== null);
         
         return $path;
     }
@@ -96,12 +97,13 @@ class Selector
      * @param int $index
      * @return Sequence Sequence or null if not found
      */
-    public function getSequence($index){
+    public function getSequence($index)
+    {
         $sequence = $this->sequence;
         
-        for($i = 0; $sequence !== null; $i++){
-
-            if($i == $index){
+        for ($i = 0; $sequence !== null; $i ++) {
+            
+            if ($i == $index) {
                 return $sequence;
             }
             
@@ -116,7 +118,8 @@ class Selector
      * 
      * @return Sequence|null
      */
-    public function getFirstSequence(){
+    public function getFirstSequence()
+    {
         return $this->sequence;
     }
 
@@ -125,14 +128,13 @@ class Selector
      * 
      * @return Sequence|null
      */
-    public function getLastSequence(){
-        
+    public function getLastSequence()
+    {
         $child = $this->sequence;
         
-        do{
+        do {
             $sequence = $child;
-        }
-        while($sequence && ($child = $sequence->getChildSequence()) !== null);
+        } while ($sequence && ($child = $sequence->getChildSequence()) !== null);
         
         return $sequence;
     }
@@ -142,15 +144,14 @@ class Selector
      * 
      * @return Sequence
      */
-    public function popSequence(){
+    public function popSequence()
+    {
         $last = $this->getLastSequence();
         
-        if($last === $this->sequence){
+        if ($last === $this->sequence) {
             $this->sequence = null;
-        }
-        else{
-            $last->getParentSequence()
-                 ->removeChildSequence();
+        } else {
+            $last->getParentSequence()->removeChildSequence();
         }
         
         return $last;
@@ -159,11 +160,11 @@ class Selector
     /**
      * Remove first sequence
      */
-    public function shiftSequence(){
-        
+    public function shiftSequence()
+    {
         $first = $this->sequence;
         
-        if($first){
+        if ($first) {
             $child = $first->getChildSequence();
             $first->removeChildSequence();
             
@@ -173,19 +174,23 @@ class Selector
         return $first;
     }
     
-    public function __toString(){
-        
+    public function __toString()
+    {
         $selector = '';
         
-        foreach($this->getSequencePath() as $value){
-            if(is_object($value)) $selector .= (string) $value;
-            else $selector .= self::$combinatorChars[$value];
+        foreach ($this->getSequencePath() as $value) {
+            if (is_object($value)) {
+                $selector .= (string) $value;
+            } else {
+                $selector .= self::$combinatorChars[$value];
+            }
         }
         
         return $selector;
     }
    
-    public function __clone(){
+    public function __clone()
+    {
         $this->sequence = clone $this->sequence;
     }
 }

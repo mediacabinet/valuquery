@@ -30,25 +30,25 @@ class PseudoParser extends AbstractParser
      *
      * @param string $pattern
      */
-    public function parse($pattern){
+    public function parse($pattern)
+    {
     
         $this->setPattern($pattern);
     
         // Parse attribute and advance
-        if($this->parseClassName() && $this->valid()){
+        if ($this->parseClassName() && $this->valid()) {
             $this->parseValue();
         }
         
-        if(!$this->className){
+        if (!$this->className) {
             throw new InvalidPatternException(
                 'Pseudo-class pattern "'.$pattern.'" is not valid');
         }
         
-        if(isset($this->parsers[$this->className])){
+        if (isset($this->parsers[$this->className])) {
             $parser = new $this->parsers[$this->className];
             return $parser->parse($this->value);
-        }
-        else{
+        } else {
             $selector = new Pseudo(
                 $this->className,
                 $this->unescape($this->value)
@@ -64,7 +64,8 @@ class PseudoParser extends AbstractParser
      *
      * @return string|false
      */
-    protected function parseClassName(){
+    protected function parseClassName()
+    {
     
         // Find enclosing character for value
         $encloser = $this->findChar('(');
@@ -83,7 +84,8 @@ class PseudoParser extends AbstractParser
         return true;
     }
     
-    protected function parseValue(){
+    protected function parseValue()
+    {
         
         // Find next valid character
         $cursor = $this->seekKeyCursorLocation(true, $this->key()+1);
@@ -92,7 +94,7 @@ class PseudoParser extends AbstractParser
         // Find closing enclosing character for value
         $encloser = $this->findChar(')');
         
-        if($encloser == false){
+        if ($encloser == false) {
             throw new InvalidPatternException(
                 'Missing closing encloser character ")" for pseudo-class pattern');
         }

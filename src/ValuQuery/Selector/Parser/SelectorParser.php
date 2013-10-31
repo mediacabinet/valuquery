@@ -34,28 +34,28 @@ class SelectorParser extends AbstractParser
             $this->cursor = $cursor;
     
             // Override with non-whitespace-combinator, if found
-            if($combinator == Selector\Selector::COMBINATOR_DESCENDENT){
+            if ($combinator == Selector\Selector::COMBINATOR_DESCENDENT) {
                 $nonWhiteSpaceCombinator = isset($this->combinators[$this->current()]) ? 
                     $this->combinators[$this->current()] 
                     : false;
     
-                if($nonWhiteSpaceCombinator !== false && $nonWhiteSpaceCombinator !== $combinator){
+                if ($nonWhiteSpaceCombinator !== false && $nonWhiteSpaceCombinator !== $combinator) {
                     $combinator = $nonWhiteSpaceCombinator;
                 }
             }
     
             // Move to next valid location after combinator
-            if($combinator !== null && $combinator != Selector\Selector::COMBINATOR_DESCENDENT){
+            if ($combinator !== null 
+                && $combinator != Selector\Selector::COMBINATOR_DESCENDENT) {
                 $this->nextKeyChar();
             }
     
             // Sequence ends at the next combinator or end of the string
             $seqLast = $this->findAny(array_keys($this->combinators), $this->key()+$seekOffset);
     
-            if($seqLast === false || $seqLast > $this->length){
+            if ($seqLast === false || $seqLast > $this->length) {
                 $seqLast = $this->length-1;
-            }
-            else{
+            } else{
                 $seqLast--;
             }
     
@@ -82,7 +82,8 @@ class SelectorParser extends AbstractParser
         return $selector;
     }
     
-    protected function getSequenceParser(){
+    protected function getSequenceParser()
+    {
         return new SequenceParser();
     }
     
