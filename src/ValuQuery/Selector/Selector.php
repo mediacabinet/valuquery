@@ -15,7 +15,7 @@ class Selector
      */
     protected $sequence;
     
-    protected static $combinatorChars = array(
+    public static $combinatorChars = array(
         self::COMBINATOR_DESCENDENT => ' ',
         self::COMBINATOR_CHILD => '>',
         self::COMBINATOR_IMMEDIATE_SIBLING => '+',
