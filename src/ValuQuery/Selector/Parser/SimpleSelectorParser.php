@@ -34,7 +34,7 @@ class SimpleSelectorParser extends AbstractParser
         'ValuQuery\Selector\SimpleSelector\Attribute'
             => 'ValuQuery\Selector\Parser\AttributeSelectorParser',
         'ValuQuery\Selector\SimpleSelector\Path'
-            => 'ValuQuery\Selector\Parser\PathSelectorParser',
+            => 'ValuQuery\Selector\Parser\PathParser',
         'ValuQuery\Selector\SimpleSelector\Pseudo'
             => 'ValuQuery\Selector\Parser\PseudoParser'
     );
