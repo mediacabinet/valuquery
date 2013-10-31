@@ -4,7 +4,7 @@ namespace ValuQuery\Selector\Parser;
 use ValuQuery\Selector\SimpleSelector,
     ValuQuery\Selector\Parser\AbstractParser;
 
-class PathSelectorParser extends AbstractParser
+class PathParser extends AbstractParser
 {
     /**
      * Parse pseudo selector from pattern
@@ -15,7 +15,7 @@ class PathSelectorParser extends AbstractParser
     {
         $this->setPattern($pattern);
         
-        if($this->pattern == ''){
+        if($this->pattern === ''){
             $items = array();
         }
         else{
@@ -40,17 +40,24 @@ class PathSelectorParser extends AbstractParser
         $items = array_map([$this, 'unescape'], $items);
         
         // Valid selectors for first item
-        $enclosures = array_merge(
+        $childSelectorEnclosures = array_merge(
             SimpleSelector\Id::getEnclosure(),
             SimpleSelector\Role::getEnclosure()
         );
         
+        if ($items[0] === '') {
+            unset($items[0]);
+        }
+        
+        $items = array_values($items);
+        
         // Parse first item as a child simple selector
-        if(in_array($this->current(), $enclosures)){
+        $this->next();
+        if(in_array($this->current(), $childSelectorEnclosures)){
             $parser = new SimpleSelectorParser();
             $items[0] = $parser->parse($items[0]);
         }
         
-        return $items;
+        return array_values($items);
     }
 }
