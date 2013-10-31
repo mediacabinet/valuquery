@@ -67,7 +67,10 @@ class QueryListener extends BaseListener
     {
         // Remove any custom parameters from the query
         $query = $event->getQuery();
-        unset($query[self::QUERY_PARAM_NS]);
+        
+        if (isset($query[self::QUERY_PARAM_NS])) {
+            unset($query[self::QUERY_PARAM_NS]);
+        }
     }
     
     public function applyElementSelector(SimpleSelectorEvent $event)
@@ -308,7 +311,7 @@ class QueryListener extends BaseListener
     {
         $meta   = $this->getDocumentManager()->getClassMetadata($documentName);
         $fields = explode('.', $field);
-        
+
         foreach ($fields as $index => &$fieldName) {
             if($index === (sizeof($fields)-1)) {
                 
@@ -322,6 +325,11 @@ class QueryListener extends BaseListener
                 if ($fieldName === $meta->discriminatorField) {
                     $value = strval($value);
                     break;
+                }
+                
+                // Do nothing if identifier and value is a boolean false
+                if ($fieldName === $meta->getIdentifier() && $value === false) {
+                    return;
                 }
 
                 // Field is actually an association, treat it as an ID
