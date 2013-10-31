@@ -194,7 +194,7 @@ class QueryListener implements ListenerAggregateInterface
                 $event->getQuery(), 
                 $this->getPathField(), 
                 null, 
-                Path::PATH_SEPARATOR . ltrim($pathSelector->getRawValue(), Path::PATH_SEPARATOR));
+                Path::PATH_SEPARATOR . ltrim($pathSelector->getPath(), Path::PATH_SEPARATOR));
             
             return true;
         }

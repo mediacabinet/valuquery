@@ -76,15 +76,15 @@ class QueryListener extends BaseListener
     public function applyElementSelector(SimpleSelectorEvent $event)
     {
         $elementSelector = $event->getSimpleSelector();
-        $documentName = $this->getDocumentNameForElement($elementSelector->getValue());
+        $documentName = $this->getDocumentNameForElement($elementSelector->getElement());
         
         if (!$documentName) {
             return new Exception\UnknownElementException(
-                sprintf('Unknown element "%s" in query', $elementSelector->getValue())
+                sprintf('Unknown element "%s" in query', $elementSelector->getElement())
             );
         }
         
-        $class = $this->getElementMetadata($elementSelector->getValue());
+        $class = $this->getElementMetadata($elementSelector->getElement());
         $query = $event->getQuery();
         
         $this->setQueryParam(
