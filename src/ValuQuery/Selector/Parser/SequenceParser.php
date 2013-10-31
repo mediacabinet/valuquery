@@ -1,5 +1,6 @@
 <?php
 namespace ValuQuery\Selector\Parser;
+
 use ValuQuery\Selector;
 
 class SequenceParser extends AbstractParser

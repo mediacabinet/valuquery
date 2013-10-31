@@ -11,8 +11,8 @@ class PathSelectorParser extends AbstractParser
      *
      * @param string $pattern
      */
-    public function parse($pattern){
-        
+    public function parse($pattern)
+    {
         $this->setPattern($pattern);
         
         if($this->pattern == ''){
@@ -29,12 +29,15 @@ class PathSelectorParser extends AbstractParser
         return $selector;
     }
     
-    protected function parsePattern(){
-        
+    protected function parsePattern()
+    {
         // Split by path enclosure
         $enclosure = SimpleSelector\Path::getEnclosure();
         $enclosure = array_pop($enclosure);
         $items     = explode($enclosure, $this->pattern);
+        
+        // Unescape
+        $items = array_map([$this, 'unescape'], $items);
         
         // Valid selectors for first item
         $enclosures = array_merge(

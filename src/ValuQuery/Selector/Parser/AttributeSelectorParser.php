@@ -50,7 +50,7 @@ class AttributeSelectorParser extends AbstractParser
         $selector = new Attribute(
             $this->attribute, 
             $this->operator, 
-            $this->value
+            $this->unescape($this->value)
         );
         
         return $selector;

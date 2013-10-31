@@ -1,8 +1,6 @@
 <?php
 namespace ValuQuery\Selector\Parser;
 
-use ValuQuery\Selector;
-
 abstract class AbstractParser implements \Iterator 
 {
     protected $cursor = 0;
@@ -84,6 +82,20 @@ abstract class AbstractParser implements \Iterator
      */
     public function valid() {
         return isset($this->pattern[$this->cursor]);
+    }
+    
+    /**
+     * Unescape value
+     *
+     * @param mixed $value
+     */
+    public function unescape($value)
+    {
+        if (is_string($value)) {
+            return stripslashes($value);
+        } else {
+            return $value;
+        }
     }
     
     /**

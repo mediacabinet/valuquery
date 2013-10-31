@@ -135,7 +135,6 @@ class Attribute extends AbstractSelector
                 $condition = $this->getCondition();
                 
                 if(is_string($condition)){
-                    $condition = stripslashes($condition);
                     $condition = '"'.addslashes($condition).'"';
                 }
             

@@ -91,7 +91,7 @@ abstract class AbstractSelector
      */
     public function getValue()
     {
-        return stripslashes($this->getRawValue());
+        return $this->getRawValue();
     }
     
     /**

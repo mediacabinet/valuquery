@@ -101,7 +101,7 @@ class SimpleSelectorParser extends AbstractParser
              */
             else{
                 $class    = '\\' . $match;
-                $selector = new $class($value);
+                $selector = new $class($this->unescape($value));
             }
         }
         

@@ -2,6 +2,7 @@
 namespace ValuQuery\Selector\Parser;
 
 use ValuQuery\Selector\SimpleSelector\Pseudo;
+use ValuQuery\Selector\Parser\Exception\InvalidPatternException;
 
 class PseudoParser extends AbstractParser
 {
@@ -39,7 +40,8 @@ class PseudoParser extends AbstractParser
         }
         
         if(!$this->className){
-            throw new \Exception('Pseudo-class pattern "'.$pattern.'" is not valid');
+            throw new InvalidPatternException(
+                'Pseudo-class pattern "'.$pattern.'" is not valid');
         }
         
         if(isset($this->parsers[$this->className])){
@@ -48,8 +50,8 @@ class PseudoParser extends AbstractParser
         }
         else{
             $selector = new Pseudo(
-                    $this->className,
-                    $this->value
+                $this->className,
+                $this->unescape($this->value)
             );
         }
     
@@ -91,7 +93,8 @@ class PseudoParser extends AbstractParser
         $encloser = $this->findChar(')');
         
         if($encloser == false){
-            throw new \Exception('Missing closing encloser character ")" for pseudo-class pattern');
+            throw new InvalidPatternException(
+                'Missing closing encloser character ")" for pseudo-class pattern');
         }
         
         // Fetch value

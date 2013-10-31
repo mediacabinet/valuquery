@@ -281,12 +281,9 @@ class QueryListener extends BaseListener
             }
             
             $path = ltrim($result[$pathField], '/');
-            $items = array_map('stripslashes', $items);
             $items = array_merge(
                     explode(SimpleSelector\Path::PATH_SEPARATOR, $path), 
                     array_values($items));
-        } else {
-            $items = array_map('stripslashes', $items);
         }
         
         // Convert string items to reg exp
