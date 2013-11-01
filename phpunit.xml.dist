@@ -12,7 +12,7 @@
 >
     <testsuites>
         <testsuite name="ValuQuery Test Suite">
-            <directory>./tests/ValuSoTest/</directory>
+            <directory>./tests/ValuQueryTest/</directory>
         </testsuite>
     </testsuites>
 
