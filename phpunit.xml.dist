@@ -11,14 +11,9 @@
          bootstrap="tests/bootstrap.php"
 >
     <testsuites>
-        <testsuite name="ValuQuert Test Suite">
-            <directory>./tests/ValuQueryTest/</directory>
+        <testsuite name="ValuQuery Test Suite">
+            <directory>./tests/ValuSoTest/</directory>
         </testsuite>
     </testsuites>
 
-    <filter>
-        <whitelist>
-            <directory suffix=".php">./lib/Doctrine/ODM/MongoDB</directory>
-        </whitelist>
-    </filter>
 </phpunit>
