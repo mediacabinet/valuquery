@@ -95,6 +95,10 @@ class SelectorParser extends AbstractParser
      */
     public static function parseSelector($pattern)
     {
+        if ($pattern instanceof \ValuQuery\Selector\Selector) {
+            return $pattern;
+        }
+        
         $parser = new SelectorParser();
         return $parser->parse($pattern);
     }
