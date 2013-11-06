@@ -130,9 +130,11 @@ class QueryListener implements ListenerAggregateInterface
 
     public function prepareQuery(QueryBuilderEvent $event)
     {
-        $event->setQuery(
-            new ArrayObject()
-        );
+        if (!$event->getQuery()) {
+            $event->setQuery(
+                new ArrayObject()
+            );
+        }
     }
 
     public function combineSequence(EventInterface $event)
@@ -308,8 +310,14 @@ class QueryListener implements ListenerAggregateInterface
                 break;
             case SimpleSelector\Attribute::OPERATOR_IN_LIST:
                 
-                $list = preg_split('/\s+/', trim($cond));
-                array_map('trim', $list);
+                if (is_string($cond)) {
+                    $list = preg_split('/\s+/', trim($cond));
+                    array_map('trim', $list);
+                } else if (!is_array($cond)) {
+                    $list = [$cond];
+                } else {
+                    $list = $cond;
+                }
                 
                 $this->applyQueryCommand($query, $attr, 'in', $list);
                 break;
