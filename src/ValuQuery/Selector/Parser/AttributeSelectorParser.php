@@ -25,9 +25,11 @@ class AttributeSelectorParser extends AbstractParser
      * 
      * @var string
      */
-    protected $value = null;   
+    protected $value = null;
 
     private static $operatorChars = null;
+    
+    private static $listSeparator = ' ';
     
     /**
      * Parse attribute selector from pattern
@@ -43,6 +45,11 @@ class AttributeSelectorParser extends AbstractParser
         if ($this->parseAttribute() && $this->valid()) {
             
             if ($this->parseOperator() && $this->valid()) {
+                
+                if ($this->hasListOperator()) {
+                    $this->value = [];
+                }
+                
                 // Parse value
                 $this->parseValue();
             }
@@ -149,6 +156,7 @@ class AttributeSelectorParser extends AbstractParser
         
         $cursor = $this->seekKeyCursorLocation(true, $this->key());
         $quoted = false;
+        $valueLast = false;
         
         // Update cursor position to next key location
         if($cursor === false) {
@@ -171,10 +179,19 @@ class AttributeSelectorParser extends AbstractParser
             else{
                 $valueLast--;
             }
-        } else { 
+        } else {
+
+            if ($this->hasListOperator()) {
+                $valueLast = $this->findChar(self::$listSeparator);
+            }
+            
             // Value not enclosed in quotes, fetch everything
             // Seek backwards, starting from the end of string
-            $valueLast = $this->seekKeyCursorLocation(false, $this->length-1);
+            if ($valueLast === false) {
+                $valueLast = $this->seekKeyCursorLocation(false, $this->length-1);
+            } else {
+                $valueLast--;
+            }
         }
         
         // Fetch value
@@ -203,9 +220,35 @@ class AttributeSelectorParser extends AbstractParser
             }
         }
         
-        $this->value = $value;
+        if ($this->hasListOperator()) {
+            $this->value[] = $value;
+            
+            // Find next item in list
+            $nextOffset = $quoted ? $valueLast+2 : $valueLast+1;
+            $next = $this->findChar(self::$listSeparator, $nextOffset);
+            if ($next !== false) {
+                $newCursor = $this->seekKeyCursorLocation(true, $next);
+                
+                if ($newCursor !== false) {
+                    $this->cursor = $newCursor;
+                    $this->parseValue();
+                }
+            }
+        } else {
+            $this->value = $value;
+        }
         
         return true;
+    }
+    
+    /**
+     * Test whether or not the current operator should be treated as an array operator
+     * 
+     * @return boolean
+     */
+    protected function hasListOperator()
+    {
+        return in_array($this->operator, [Attribute::OPERATOR_IN_LIST]);
     }
     
     /**
