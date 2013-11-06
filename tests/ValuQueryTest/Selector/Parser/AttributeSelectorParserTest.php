@@ -28,8 +28,24 @@ class AttributeSelectorParserTest
     }
     
     public function testInListOperator(){
-        $selector = 'abc~="def ghi"';
+        $selector = 'abc~=def ghi';
+        $this->assertPattern($selector, 'abc~="def" "ghi"');
+    }
+    
+    public function testInListOperatorWithQuotedValues(){
+        $selector = 'abc~="def" "ghi"';
         $this->assertPattern($selector);
+    }
+    
+    public function testInListOperatorWithDoubleSpaceSeparator(){
+        $selector = 'abc~="def"  "yzx"';
+        $this->assertPattern($selector, 'abc~="def" "yzx"');
+    }
+    
+    public function testInListOperatorWithMixedTypes()
+    {
+        $selector = 'abc~=true "abc" 2.4 def 5';
+        $this->assertPattern($selector, 'abc~=1 "abc" 2.4 "def" 5');
     }
     
     public function testPrefixOperator(){
