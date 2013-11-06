@@ -365,7 +365,11 @@ class QueryListener extends BaseListener
                 
                 // Convert to DB value, unless we've found an association
                 if ($type) {
-                    $value = $type->convertToDatabaseValue($value);
+                    if (is_array($value)) {
+                        $value = array_map([$type, 'convertToDatabaseValue'], $value);
+                    } else {
+                        $value = $type->convertToDatabaseValue($value);
+                    }
                 }
             } else if($meta->hasAssociation($fieldName)) {
 
