@@ -28,6 +28,8 @@ class Attribute extends AbstractSelector
     
     const OPERATOR_LESS_THAN_OR_EQUAL = '<=';
     
+    const LIST_SEPARATOR = ' ';
+    
     protected $name = AbstractSelector::SELECTOR_ATTRIBUTE;
     
     protected $attribute;
@@ -110,7 +112,7 @@ class Attribute extends AbstractSelector
      * Get condition
      * 
      * Condition may be string, boolean, null
-     * or float.
+     * float or array.
      * 
      * @return mixed
      */
@@ -134,10 +136,18 @@ class Attribute extends AbstractSelector
             
                 $condition = $this->getCondition();
                 
-                if(is_string($condition)){
+                if (is_array($condition)) {
+                    foreach ($condition as &$item) {
+                        if(is_string($item)){
+                            $item = '"'.self::escapeCondition($item).'"';
+                        }
+                    }
+                    
+                    $condition = implode(self::LIST_SEPARATOR, $condition);
+                } else if(is_string($condition)){
                     $condition = '"'.self::escapeCondition($condition).'"';
                 }
-            
+                
                 $this->value = $this->getAttribute() . $this->getOperator() . $condition;
             }
             else{
