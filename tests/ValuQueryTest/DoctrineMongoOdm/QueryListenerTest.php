@@ -1,14 +1,7 @@
 <?php
 namespace ValuQueryTest\DoctrineMongoOdm;
 
-use PHPUnit_Framework_TestCase as TestCase;
 use ValuQuery\DoctrineMongoOdm\QueryListener;
-use Doctrine\ODM\MongoDB\DocumentManager;
-use Doctrine\MongoDB\Connection;
-use Doctrine\ODM\MongoDB\Configuration;
-use Doctrine\Common\EventManager as Evm;
-use Doctrine\Common\Cache\ArrayCache;
-use Doctrine\ODM\MongoDB\Mapping\Driver\AnnotationDriver;
 use ValuQuery\Selector\SimpleSelector\Element;
 use ValuQuery\QueryBuilder\Event\QueryBuilderEvent;
 use ValuQuery\QueryBuilder\Event\SimpleSelectorEvent;
@@ -23,35 +16,20 @@ use Zend\EventManager\EventManager;
 use ValuQuery\Selector\Parser\SelectorParser;
 use ValuQuery\QueryBuilder\QueryBuilder;
 
-class QueryListenerTest extends TestCase
+class QueryListenerTest extends AbstractTestCase
 {
+    /**
+     * QueryListener
+     * @var QueryListener
+     */
     private $queryListener;
     
     public function setUp()
     {
-
-        $evm = new Evm();
+        parent::setUp();
         
-        /* @var $driver MappingDriver */
-        $driver = AnnotationDriver::create();
-        AnnotationDriver::registerAnnotationClasses();
-        
-        $configuration = new Configuration();
-        $configuration->addDocumentNamespace('valuquerytest', __DIR__ . '/../TestAsset');
-        $configuration->setProxyDir(__DIR__ . '/../../resources/proxy');
-        $configuration->setHydratorDir(__DIR__ . '/../../resources/hydrator');
-        $configuration->setAutoGenerateHydratorClasses(true);
-        $configuration->setAutoGenerateProxyClasses(true);
-        $configuration->setProxyNamespace('ValuQueryTestProxy');
-        $configuration->setHydratorNamespace('ValuQueryTestHydrator');
-        $configuration->setDefaultDB('valuquerytest');
-        $configuration->setMetadataCacheImpl(new ArrayCache());
-        $configuration->setMetadataDriverImpl($driver);
-        
-        $connection = new Connection('mongodb://localhost:27017', [], $configuration, $evm);
-        
-        $dm = DocumentManager::create($connection, $configuration, $evm);
-        $this->queryListener = new QueryListener($dm, 'ValuQueryTest\TestAsset\Animal');
+        $this->queryListener = new QueryListener(
+            $this->dm, 'ValuQueryTest\TestAsset\Animal');
     }
     
     public function testAttach()
