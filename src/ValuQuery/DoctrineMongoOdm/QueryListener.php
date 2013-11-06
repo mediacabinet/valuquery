@@ -308,7 +308,13 @@ class QueryListener extends BaseListener
         $meta   = $this->getDocumentManager()->getClassMetadata($documentName);
         $fields = explode('.', $field);
 
-        foreach ($fields as $index => &$fieldName) {
+        foreach ($fields as $index => $fieldName) {
+            
+            // Map PHP attribute name to database field name
+            if ($fieldName !== $meta->getIdentifier() && isset($meta->fieldMappings[$fieldName])) {
+                $fields[$index] = $meta->fieldMappings[$fieldName]['name'];
+            }
+            
             if($index === (sizeof($fields)-1)) {
                 
                 // Map _id automatically to correct identifier field name
@@ -317,15 +323,15 @@ class QueryListener extends BaseListener
                     $fieldName = $meta->getIdentifier();
                 }
                 
+                // Do nothing if identifier and value is a boolean false
+                if ($fieldName === $meta->getIdentifier() && $value === false) {
+                    return;
+                }
+                
                 // Field is a discriminator field, treat it as a string
                 if ($fieldName === $meta->discriminatorField) {
                     $value = strval($value);
                     break;
-                }
-                
-                // Do nothing if identifier and value is a boolean false
-                if ($fieldName === $meta->getIdentifier() && $value === false) {
-                    return;
                 }
 
                 // Field is actually an association, treat it as an ID
@@ -339,7 +345,7 @@ class QueryListener extends BaseListener
 
                     // If we're using DBRefs, add .$db to field name
                     if (!isset($fieldMapping['simple']) || $fieldMapping['simple'] !== true) {
-                        $field .= '.$id';
+                        $fields[] = '$id';
                     }
 
                     // Finally, convert ID to DB value
@@ -372,6 +378,9 @@ class QueryListener extends BaseListener
                 }
             }
         }
+        
+        // Apply field name mapping
+        $field = implode('.', $fields);
     }
 
     /**

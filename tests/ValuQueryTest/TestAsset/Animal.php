@@ -47,6 +47,12 @@ abstract class Animal{
 	 * @var string
 	 */
 	public $path;
+	
+	/**
+	 * @ODM\Boolean(name="breedUw")
+	 * @var string
+	 */
+	public $isAbleToBreedUnderWater;
 
 	/**
 	 * Classes

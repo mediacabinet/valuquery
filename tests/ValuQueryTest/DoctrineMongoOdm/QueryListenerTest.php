@@ -265,6 +265,22 @@ class QueryListenerTest extends TestCase
         );
     }
     
+    public function testAttributeQueryUsingMappedField()
+    {
+        $this->assertAttributeQueryEquals(
+            ['breedUw' => false],
+            'isAbleToBreedUnderWater', Attribute::OPERATOR_EQUALS, false
+        );
+    }
+    
+    public function testAttributeQueryUsingMappedFieldInEmbeddedDocument()
+    {
+        $this->assertAttributeQueryEquals(
+            ['head.isInMainCirc' => false],
+            'head.isPartOfMainBloodCirculation', Attribute::OPERATOR_EQUALS, false
+        );
+    }
+    
     public function testBuildQuery()
     {
         $qb = new QueryBuilder();

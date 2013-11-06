@@ -25,4 +25,10 @@ class Organ{
 	 * @var boolean
 	 */
 	public $replacable = false;
+	
+	/**
+	 * @ODM\Boolean(name="isInMainCirc")
+	 * @var string
+	 */
+	public $isPartOfMainBloodCirculation = true;
 }
