@@ -36,6 +36,13 @@ class QueryListener extends BaseListener
      */
     protected $defaultDocumentName;
     
+    /**
+     * ValueConverter
+     * 
+     * @var ValueConverter
+     */
+    protected $valueConverter;
+    
     public function __construct(DocumentManager $dm, $documentName = null)
     {
         $this->setDocumentManager($dm);
@@ -185,6 +192,20 @@ class QueryListener extends BaseListener
     {
         $this->defaultDocumentName = $defaultDocumentName;
     }
+    
+    /**
+     * Retrieve value converter
+     * 
+     * @return \ValuQuery\DoctrineMongoOdm\ValueConverter
+     */
+    protected function getValueConverter()
+    {
+        if ($this->valueConverter === null) {
+            $this->valueConverter = new ValueConverter($this->getDocumentManager());
+        }
+        
+        return $this->valueConverter;
+    }
      
     /**
      * @see \ValuQuery\MongoDb\QueryListener::filterField()
@@ -305,86 +326,7 @@ class QueryListener extends BaseListener
      */
     protected function filterFieldForDocument($documentName, &$field, &$value)
     {
-        $meta   = $this->getDocumentManager()->getClassMetadata($documentName);
-        $fields = explode('.', $field);
-
-        foreach ($fields as $index => $fieldName) {
-            
-            // Map PHP attribute name to database field name
-            if ($fieldName !== $meta->getIdentifier() && isset($meta->fieldMappings[$fieldName])) {
-                $fields[$index] = $meta->fieldMappings[$fieldName]['name'];
-            }
-            
-            if($index === (sizeof($fields)-1)) {
-                
-                // Map _id automatically to correct identifier field name
-                // (_id is mostly for internal usage)
-                if ($fieldName === '_id') {
-                    $fieldName = $meta->getIdentifier();
-                }
-                
-                // Do nothing if identifier and value is a boolean false
-                if ($fieldName === $meta->getIdentifier() && $value === false) {
-                    return;
-                }
-                
-                // Field is a discriminator field, treat it as a string
-                if ($fieldName === $meta->discriminatorField) {
-                    $value = strval($value);
-                    break;
-                }
-
-                // Field is actually an association, treat it as an ID
-                // based on target document's metadata
-                if($meta->hasAssociation($fieldName)) {
-                    $fieldMapping = $meta->getFieldMapping($fieldName);
-                    $targetMeta = $this->getDocumentManager()
-                        ->getClassMetadata($fieldMapping['targetDocument']);
-
-                    $type = $this->resolveFieldType($targetMeta, $targetMeta->getIdentifier());
-
-                    // If we're using DBRefs, add .$db to field name
-                    if (!isset($fieldMapping['simple']) || $fieldMapping['simple'] !== true) {
-                        $fields[] = '$id';
-                    }
-
-                    // Finally, convert ID to DB value
-                    if (is_array($value)) {
-                        foreach ($value as $key => &$id) {
-                            $value[$key] = $type->convertToDatabaseValue($id);
-                        }
-                    } else {
-                        $value = $type->convertToDatabaseValue($value);
-                    }
-                    
-                    break;
-                }
-
-                // Find field type from the child class metadata
-                $type = $this->resolveFieldType($meta, $fieldName);
-                
-                // Convert to DB value, unless we've found an association
-                if ($type) {
-                    if (is_array($value)) {
-                        $value = array_map([$type, 'convertToDatabaseValue'], $value);
-                    } else {
-                        $value = $type->convertToDatabaseValue($value);
-                    }
-                }
-            } else if($meta->hasAssociation($fieldName)) {
-
-                $meta = $this->getDocumentManager()
-                        ->getClassMetadata(
-                            $meta->getAssociationTargetClass($fieldName));
-                
-                if (!$meta) {
-                    break;
-                }
-            }
-        }
-        
-        // Apply field name mapping
-        $field = implode('.', $fields);
+        $this->getValueConverter()->convertToDatabase($documentName, $field, $value);
     }
 
     /**
@@ -414,38 +356,6 @@ class QueryListener extends BaseListener
             return $query[self::QUERY_PARAM_NS][$param];
         } else {
             return $default;
-        }
-    }
-    
-    /**
-     * Resolve field type
-     * 
-     * @param ClassMetadata $meta
-     * @param string $field Field name
-     * @return \Doctrine\ODM\MongoDB\Types\Type|null
-     */
-    private function resolveFieldType(ClassMetadata $meta, $field)
-    {
-        // Find field type from the child class metadata
-        $type = $meta->getTypeOfField($field);
-    
-        // If field type was not defined in the class itself,
-        // search for its parents until found
-        if (!$type) {
-            foreach ($meta->parentClasses as $class)
-            {
-                $type = $this->getDocumentManager()
-                ->getClassMetadata($class)
-                ->getTypeOfField($field);
-    
-                if($type) break;
-            }
-        }
-    
-        if ($type && $type !== 'collection' && $type !== 'one') {
-            return Type::getType($type);
-        } else {
-            return null;
         }
     }
 }
