@@ -9,6 +9,7 @@ use Doctrine\ODM\MongoDB\Cursor;
 use Doctrine\ODM\MongoDB\LoggableCursor;
 use Doctrine\MongoDB\LoggableCursor as BaseLoggableCursor;
 use ArrayObject;
+use ValuQuery\DoctrineMongoOdm\Exception\InvalidQueryException;
 
 /**
  * DoctineMongoDB ODM query helper
@@ -21,21 +22,21 @@ class QueryHelper
      * 
      * @var string
      */
-    const ID_MONGO = 'mongoid';
+    const ID_MONGO = 1;
     
     /**
      * UUID3 type
      * 
      * @var string
      */
-    const ID_UUID3 = 'uuid3';
+    const ID_UUID3 = 2;
     
     /**
      * UUID5 type
      * 
      * @var string
      */
-    const ID_UUID5 = 'uuid5';
+    const ID_UUID5 = 3;
     
     /**
      * Indicates find operation for a single entity
@@ -57,6 +58,13 @@ class QueryHelper
      * @var int
      */
     const COUNT = 3;
+    
+    /**
+     * Indicates query parse operation
+     *
+     * @var int
+     */
+    const PARSE = 4;
     
     /**
      * Universal selector
@@ -163,6 +171,18 @@ class QueryHelper
     }
     
     /**
+     * Parse query and return corresponding query specs ready to be sent to collection's find method
+     * 
+     * @param string|array $query
+     * @param null|string|array $fields
+     * @return array
+     */
+    public function parse($query, $fields = null)
+    {
+        return $this->doQuery($query, $fields, self::PARSE);
+    }
+    
+    /**
      * Count number of documents matching the query
      * 
      * @param mixed $query
@@ -170,7 +190,7 @@ class QueryHelper
      */
     public function count($query)
     {
-        $this->doQuery($query, null, self::COUNT);
+        return $this->doQuery($query, null, self::COUNT);
     }
     
     /**
@@ -182,88 +202,6 @@ class QueryHelper
     public function exists($query)
     {
         return $this->count($query) >= 1;
-    }
-    
-    /**
-     * Find documents by CSS style selector
-     * 
-     * @see Helper::query()       for instructions how to use $fields parameter
-     * 
-     * @param string $selector    CSS style selector
-     * @param string $fields      Field(s) to return    
-     * @return array              Array of documents or values for requested fields.
-     *                            Returns empty array if selector doesn't match.
-     */
-    public function findBySelector($selector, $fields = null)
-    {
-        return $this->doFindBySelector($selector, $fields);
-    }
-    
-    /**
-     * Find a document by CSS style selector
-     * 
-     * @see Helper::findBySelector()    for usage details
-     * 
-     * @param string $selector    CSS style selector
-     * @param string $fields      Field(s) to return    
-     * @return mixed              Document or value(s) of requested field(s).
-     *                            Returns null if selector doesn't match.
-     */
-    public function findOneBySelector($selector, $fields = null)
-    {
-        return $this->doFindBySelector($selector, $fields, self::FIND_ONE);
-    }
-    
-    /**
-     * Count documents by CSS style selector
-     *
-     * @param string $selector
-     * @return int
-     */
-    public function countBySelector($selector)
-    {
-        return $this->doFindBySelector($selector, null, self::COUNT);
-    }
-    
-    /**
-     * Find documents by criteria
-     * 
-     * The criteria array is passed directly to query builder.
-     * 
-     * @param array $query            Query criteria
-     * @param string|array $fields    Field(s) to return
-     * @return array                  Documents or value(s) of requested field(s).
-     *                                Returns empty array if query doesn't match.
-     */
-    public function findByArray(array $query, $fields = null)
-    {
-        return $this->doFindByArray($query, $fields);
-    }
-    
-    /**
-     * Find one document by criteria
-     *
-     * The criteria array is passed directly to query builder.
-     *
-     * @param array $query            Query criteria
-     * @param string|array $fields    Field(s) to return
-     * @return array                  Documents or value(s) of requested field(s).
-     *                                Returns null if query doesn't match.
-     */
-    public function findOneByArray(array $query, $fields = null)
-    {
-        return $this->doFindByArray($query, $fields, self::FIND_ONE);
-    }
-    
-    /**
-     * Count documents by criteria
-     * 
-     * @param array $query
-     * @return int
-     */
-    public function countByArray(array $query)
-    {
-        return $this->doFindByArray($query, null, self::COUNT);
     }
     
     /**
@@ -279,6 +217,8 @@ class QueryHelper
             return trim($query) == '';
         } elseif (is_array($query)) {
             return sizeof($query) == 0;
+        } elseif($query === null) {
+            return true;
         } else {
             return false;
         }
@@ -292,9 +232,7 @@ class QueryHelper
      */
     public function enableIdDetection($type = self::ID_MONGO)
     {
-        $this->idType = $type;
-        
-        switch ($this->idType) {
+        switch ($type) {
             case self::ID_MONGO:
                 $this->idLength = 24;
                 break;
@@ -306,6 +244,8 @@ class QueryHelper
                 throw new \InvalidArgumentException('Unrecognized ID type');
                 break;
         }
+        
+        $this->idType = $type;
         
         return $this;
     }
@@ -381,24 +321,21 @@ class QueryHelper
      */
     private function doQuery($query, $fields = null, $mode = self::FIND_MANY)
     {
-        if(is_string($query)) {
-            if ($mode == self::FIND_MANY) {
-                return $this->findBySelector($query, $fields);
-            } else if ($mode === self::COUNT) {
-                return $this->countBySelector($query);
+        // Return early if query is empty
+        if ($this->isEmptyQueryParam($query)) {
+            if ($mode === self::FIND_MANY) {
+                return array();
             } else {
-                return $this->findOneBySelector($query, $fields);
+                return null;
             }
+        }
+        
+        if (is_string($query)) {
+            return $this->doFindBySelector($query, $fields, $mode);
         } elseif(is_array($query)) {
             
             if(empty($query) || $this->isAssociativeArray($query)) {
-                if ($mode == self::FIND_MANY) {
-                    return $this->findByArray($query, $fields);
-                } else if ($mode === self::COUNT) {
-                    return $this->countByArray($query);
-                } else {
-                    return $this->findOneByArray($query, $fields);
-                }
+                return $this->doFindByArray($query, $fields, $mode);
             } else {
                 $mainQuery = new ArrayObject();
                 $mainQuery['query']['$or'] = [];
@@ -407,27 +344,23 @@ class QueryHelper
                 
                 foreach ($query as $selector) {
                     $subQuery = new ArrayObject();
-                    $this->applySelector($subQuery, $selector);
+                    $this->applySelector($subQuery, $selector, true);
                     
                     $mainQuery['query']['$or'][] = $subQuery['query'];
                     
-                    foreach (['sort', 'limit'] as $copy) {
+                    foreach (['sort', 'limit', 'skip'] as $copy) {
                         if (isset($subQuery[$copy]) && !isset($mainQuery[$copy])) {
                             $mainQuery[$copy] = $subQuery[$copy];
                         }
                     }
                 }
                 
-                $result  = $this->execute($query, $mode);
-                return $this->prepareResult($result, $fields, $mode);
+                return $this->process($mainQuery, $fields, $mode);
             }
-             
         } else {
-            if ($mode == self::FIND_MANY) {
-                return array();
-            } else {
-                return null;
-            }
+            throw new InvalidQueryException(
+                sprintf('Unrecognized query format; string or array expected, %s received', gettype($query))
+            );
         }
     }
     
@@ -436,10 +369,19 @@ class QueryHelper
      *
      * @param ArrayObject $query
      * @param string $selector
+     * @param boolean $useIdDetection
      * @return ArrayObject
      */
-    protected function applySelector(ArrayObject $query, $selector)
+    protected function applySelector(ArrayObject $query, $selector, $useIdDetection = false)
     {
+        if ($useIdDetection) {
+            $id = $this->detectId($selector);
+            
+            if ($id !== null) {
+                $selector = '#'.$selector;
+            }
+        }
+        
         $definition = SelectorParser::parseSelector($selector);
         return $this->getQueryBuilder()->build($definition, $query);
     }
@@ -455,14 +397,21 @@ class QueryHelper
      * @param string $mode
      * @return int|null|array|\Doctrine\ODM\MongoDB\Cursor
      */
-    private function doFindByArray(array $query, $fields = null, $mode = self::FIND_MANY)
+    protected function doFindByArray(array $query, $fields = null, $mode = self::FIND_MANY)
     {
         $odmQuery = new ArrayObject();
     
         // Parse internal commands
         foreach (array('sort', 'limit', 'offset') as $cmd) {
             if (array_key_exists(self::CMD . $cmd, $query)) {
-                $odmQuery[$cmd] = $query[self::CMD . $cmd];
+                
+                if ($cmd === 'offset') {
+                    $mongoCmd = 'skip';
+                } else {
+                    $mongoCmd = $cmd;
+                }
+                
+                $odmQuery[$mongoCmd] = $query[self::CMD . $cmd];
                 unset($query[self::CMD . $cmd]);
             } else {
                 $odmQuery[$cmd] = null;
@@ -475,72 +424,55 @@ class QueryHelper
         // Prepare query (e.g. map PHP attribute names to field names)
         $persister = $this->getUow()->getDocumentPersister($this->documentName);
         $odmQuery['query'] = $persister->prepareQueryOrNewObj($query);
+
+        return $this->process($odmQuery, $fields, $mode);
+    }
+    
+    /**
+     * Process query
+     * 
+     * @param ArrayObject $query
+     * @param array|null|string $fields
+     * @param int $mode
+     * @return boolean|string|\Doctrine\ODM\MongoDB\Cursor|NULL|array
+     */
+    protected function process(ArrayObject $query, $fields, $mode)
+    {
+        $preparedQuery = $this->prepareQuery($query, $mode);
         
-        $result = $this->execute($odmQuery->getArrayCopy(), $mode);
-        
-        // Prepare result
-        return $this->prepareResult($result, $fields, $mode);
+        if ($mode === self::PARSE) {
+            return $preparedQuery;
+        } else {
+            $result = $this->execute($preparedQuery, $mode);
+            return $this->prepareResult($result, $fields, $mode);
+        }
     }
     
     /**
      * Execute query 
      * 
      * @param array $query
-     * @param boolean $hydrate
      * @param int $mode
      * @return \Doctrine\ODM\MongoDB\Cursor|\Doctrine\ODM\MongoDB\LoggableCursor|int
      */
-    private function execute(array $query, $mode)
+    protected function execute(array $query, $mode)
     {
-        $dm = $this->getDocumentManager();
-        $coll  = $dm->getDocumentCollection($this->documentName);
-        $classMeta = $dm->getClassMetadata($this->documentName);
-        $documentPersister = $this->getUow()->getDocumentPersister($this->documentName);
-
-        $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_FIND;
-    
-        if ($mode === self::FIND_ONE) {
-            $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_FIND;
-            $query['limit'] = 1;
-        } else if ($mode === self::COUNT) {
-            $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_COUNT;
-        } else {
-            $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_FIND;
-        }
-    
-        // Apply filters
-        $query['query'] = $documentPersister->addFilterToPreparedQuery($query['query']);
-    
-        // Apply discriminator
-        $query['query'] = $documentPersister->addDiscriminatorToPreparedQuery($query['query']);
-    
         if (!isset($query['select']) || empty($query['select'])) {
-            $query['select'] = [];
             $hydrate = true;
         } else {
-            $query['select'] = $documentPersister->prepareSortOrProjection($query['select']);
             $hydrate = false;
         }
-    
-        if (!isset($query['sort'])) {
-            $query['sort'] = [];
-        } else {
-            $query['sort'] = $documentPersister->prepareSortOrProjection($query['sort']);
-        }
-    
-        if (!array_key_exists('limit', $query)) {
-            $query['limit'] = null;
-        }
-    
-        $query['slaveOkay'] = $classMeta->slaveOkay;
-    
+        
+        $dm = $this->getDocumentManager();
+        $coll  = $dm->getDocumentCollection($this->documentName);
+
         // Count matched documents or retrieve cursor
         // using find
         if ($mode === self::COUNT) {
             return $coll->count(
                 $query['query'],
-                $query['limit'] === null ? 0 : $query['limit'],
-                $query['sort'] === null ? 0 : $query['sort']);
+                !isset($query['limit']) ? 0 : $query['limit'],
+                !isset($query['skip']) ? 0 : $query['skip']);
         } else {
             $cursor = $coll->find($query['query'], $query['select']);
             
@@ -564,25 +496,76 @@ class QueryHelper
     }
     
     /**
+     * Prepare query for execute
+     * 
+     * @param ArrayObject $query
+     * @param int $mode
+     * @return array
+     */
+    protected function prepareQuery(ArrayObject $query, $mode)
+    {
+        $query = $query->getArrayCopy();
+        
+        $dm = $this->getDocumentManager();
+        $classMeta = $dm->getClassMetadata($this->documentName);
+        $documentPersister = $this->getUow()->getDocumentPersister($this->documentName);
+        
+        $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_FIND;
+        
+        if ($mode === self::FIND_ONE) {
+            $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_FIND;
+            $query['limit'] = 1;
+        } else if ($mode === self::COUNT) {
+            $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_COUNT;
+        } else {
+            $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_FIND;
+        }
+        
+        // Apply filters
+        $query['query'] = $documentPersister->addFilterToPreparedQuery($query['query']);
+        
+        // Apply discriminator
+        $query['query'] = $documentPersister->addDiscriminatorToPreparedQuery($query['query']);
+        
+        if (!isset($query['select']) || empty($query['select'])) {
+            $query['select'] = [];
+        } else {
+            $query['select'] = $documentPersister->prepareSortOrProjection($query['select']);
+        }
+        
+        if (!isset($query['sort'])) {
+            $query['sort'] = [];
+        } else {
+            $query['sort'] = $documentPersister->prepareSortOrProjection($query['sort']);
+        }
+        
+        if (!array_key_exists('limit', $query)) {
+            $query['limit'] = null;
+        }
+        
+        $query['slaveOkay'] = $classMeta->slaveOkay;
+        
+        return $query;
+    }
+    
+    /**
      * Perform find by selector string
      * 
      * @param string $selector
      * @param string|array $fields
      * @param string $mode
      */
-    private function doFindBySelector($selector, $fields = null, $mode = self::FIND_MANY)
+    protected function doFindBySelector($selector, $fields = null, $mode = self::FIND_MANY)
     {
-        if ($selector == '') {
-            return $mode == self::FIND_MANY ? array() : null;
-        }
-        
         // Detect ID
         $id = $this->detectId($selector);
         
         // Find documents using faster methods 
         // when ID selector is used
-        if ($id !== null && $fields === null && $mode == self::FIND_ONE) {
-            return $this->getDocumentRepository()->findOneBy(array('id' => $id));
+        if ($id !== null && $fields === null && $mode === self::FIND_ONE) {
+            return $this->getDocumentManager()
+                ->getRepository($this->documentName)
+                ->findOneBy(array('id' => $id));
         } elseif ($id !== null) {
             return $this->doFindByArray(array('id' => $id), $fields, $mode);
         }
@@ -593,12 +576,10 @@ class QueryHelper
         $this->applyFields($query, $fields);
         
         if($selector && ($selector !== self::UNIVERSAL_SELECTOR)){
-            $this->applySelector($query, $selector);
+            $this->applySelector($query, $selector, false);
         }
         
-        $result = $this->execute($query->getArrayCopy(), $mode);
-
-        return $this->prepareResult($result, $fields, $mode);
+        return $this->process($query, $fields, $mode);    
     }
     
     /**
@@ -607,7 +588,7 @@ class QueryHelper
      * @param ArrayObject $query
      * @param array|string $fields
      */
-    private function applyFields(ArrayObject $query, $fields)
+    protected function applyFields(ArrayObject $query, $fields)
     {
         if (!$fields) {
             return false;
@@ -634,7 +615,7 @@ class QueryHelper
      * @param int $mode
      * @return string|array|\Doctrine\ODM\MongoDB\Cursor|null
      */
-    private function prepareResult($result, $fields, $mode)
+    protected function prepareResult($result, $fields, $mode)
     {
         if ($result === null) {
             return null;
@@ -665,24 +646,67 @@ class QueryHelper
             }
         } else if (!empty($fields)) {
             
-            $data = [];
-            
-            foreach ($result as $specs) {
-                if (isset($specs['_id'])) {
-                    
-                    if (isset($fields['id']) && $fields['id'] == true) {
-                        $specs['id'] = $specs['_id'];
-                    }
-                    
-                    unset($specs['_id']);
-                }
+            if ($mode === self::FIND_MANY) {
+                $data = [];
                 
-                $data[] = $specs;
+                foreach ($result as $documentData) {
+                    $this->filterDocumentData($documentData, $fields);
+                    $data[] = $documentData;
+                }
+                return $data;
+            } else {
+                $this->filterDocumentData($result, $fields);
+                return $result;
             }
-            
-            return $data;
         } else {
             return $result;
+        }
+    }
+    
+    /**
+     * Filter array representing single document data
+     * 
+     * @param array $data
+     * @param array|null $fields
+     */
+    protected function filterDocumentData(&$data, $fields)
+    {
+        if (isset($data['_id'])) {
+        
+            if (isset($fields['id']) && $fields['id'] == true) {
+                $data['id'] = $data['_id'];
+            }
+        
+            unset($data['_id']);
+        }
+    }
+    
+    /**
+     * Detect if value represents ID
+     * 
+     * @param string $value
+     * @return string|NULL
+     */
+    protected function detectId($value)
+    {
+        $matchLength = false;
+        
+        if ($this->idLength !== null
+            && strlen($value) == $this->idLength) {
+            
+            $matchLength = true;
+        } elseif ($this->idLength !== null
+                  && strlen($value) == $this->idLength+1
+                  && substr($value, 0, 1) == self::ID_PREFIX) {
+            
+            $matchLength = true;
+            $value = substr($value, 1);
+        }
+        
+        if ($matchLength && ctype_alnum($value)) {
+            return $value;
+        } else {
+            return null;
         }
     }
     
@@ -708,35 +732,6 @@ class QueryHelper
     }
     
     /**
-     * Detect if value represents ID
-     * 
-     * @param string $value
-     * @return string|NULL
-     */
-    private function detectId($value)
-    {
-        $matchLength = false;
-        
-        if ($this->idLength !== null
-            && strlen($value) == $this->idLength) {
-            
-            $matchLength = true;
-        } elseif ($this->idLength !== null
-                  && strlen($value) == $this->idLength+1
-                  && substr($value, 0, 1) == self::ID_PREFIX) {
-            
-            $matchLength = true;
-            $value = substr($value, 1);
-        }
-        
-        if ($matchLength && ctype_alnum($value)) {
-            return $value;
-        } else {
-            return null;
-        }
-    }
-    
-    /**
      * Wraps the supplied base cursor as an ODM one.
      * 
      * This functionality is copied from DocumentPersister class.
@@ -746,7 +741,7 @@ class QueryHelper
      *
      * @return Cursor An ODM cursor
      */
-    private function prepareCursor(BaseCursor $cursor, $query)
+    protected function prepareCursor(BaseCursor $cursor, $query)
     {
         // Apply internal commands
         if (isset($query['sort'])) {
@@ -757,8 +752,8 @@ class QueryHelper
             $cursor->limit($query['limit']);
         }
         
-        if (isset($query['offset'])) {
-            $cursor->skip($query['offset']);
+        if (isset($query['skip'])) {
+            $cursor->skip($query['skip']);
         }
         
         $dm = $this->getDocumentManager();

@@ -2,6 +2,8 @@
 namespace ValuQueryTest\DoctrineMongoOdm;
 
 use ValuQuery\DoctrineMongoOdm\QueryHelper;
+use ValuQueryTest\TestAsset\Organ;
+use ValuQuery\QueryBuilder\Event\SimpleSelectorEvent;
 
 /**
  * QueryHelper test case.
@@ -59,6 +61,14 @@ class QueryHelperTest extends AbstractTestCase
         $this->assertSame($lion, $result->current());
     }
     
+    /**
+     * @expectedException ValuQuery\DoctrineMongoOdm\Exception\InvalidQueryException
+     */
+    public function testInvalidQuery()
+    {
+        $this->queryHelper->query($this->createTestEntity('Cat',['name' => 'Tiger']));
+    }
+    
     public function testQueryById()
     {
         $tiger = $this->createTestEntity('Cat',['name' => 'Tiger']);
@@ -67,6 +77,15 @@ class QueryHelperTest extends AbstractTestCase
         $result = $this->queryHelper->query((string) $tiger->id);
         $result->next();
         $this->assertSame($tiger, $result->current());
+    }
+    
+    /**
+     * @expectedException ValuQuery\DoctrineMongoOdm\Exception\UnknownElementException
+     */
+    public function testQueryDoesntMatchByIdWhenIdDetectionIsDisabled()
+    {
+        $this->queryHelper->disableIdDetection();
+        $this->queryHelper->query('59435d0b854a31bbad8da7aadf8ed385');
     }
     
     public function testQueryBySelector()
@@ -85,6 +104,38 @@ class QueryHelperTest extends AbstractTestCase
         $this->assertSame($leopard, $result->current());
     }
     
+    public function testQueryByArray()
+    {
+        $tiger = $this->createTestEntity('Cat',['name' => 'Tiger', 'classes' => ['ultrafast']]);
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
+        $leopard = $this->createTestEntity('Cat',['name' => 'Leopard', 'classes' => ['ultrafast']]);
+        
+        $result = $this->queryHelper->query(
+            ['classes' => ['$in' => ['ultrafast']]]);
+        
+        $this->assertEquals(2, $result->count());
+        
+        $result->next();
+        $this->assertSame($tiger, $result->current());
+        
+        $result->next();
+        $this->assertSame($leopard, $result->current());
+    }
+    
+    public function testQueryByArrayUsingCursorParameters()
+    {
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion', 'maxAge' => 10]);
+        $tiger = $this->createTestEntity('Cat',['name' => 'Tiger', 'maxAge' => 15]);
+        $dog = $this->createTestEntity('Dog',['name' => 'Bulldog', 'maxAge' => 17]);
+    
+        $result = $this->queryHelper->query(
+            ['@sort' => ['name' => true], '@limit' => 2, '@offset' => 1],
+            'name'
+        );
+    
+        $this->assertEquals(['Lion', 'Tiger'], $result);
+    }
+    
     public function testQueryField()
     {
         $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
@@ -99,39 +150,123 @@ class QueryHelperTest extends AbstractTestCase
         $lion = $this->createTestEntity('Cat',['name' => 'Lion', 'maxAge' => 15, 'createdAt' => new \DateTime()]);
         $tomcat = $this->createTestEntity('Cat',['name' => 'Tomcat', 'maxAge' => 20]);
         
-        $result = $this->queryHelper->query('[maxAge>=15]', ['name' => true, 'maxAge' => true, 'id' => true, 'createdAt' => true]);
+        $result = $this->queryHelper->query('[maxAge>=15]', ['name' => true, 'maxAge' => true]);
         $this->assertEquals([['name' => 'Lion', 'maxAge' => 15],['name' => 'Tomcat', 'maxAge' => 20]], $result);
     }
     
-    /**
-     * @expectedException ValuQuery\DoctrineMongoOdm\Exception\UnknownElementException
-     */
-    public function testQueryDoesntMatchByIdWhenIdDetectionIsDisabled()
+    public function testQueryEmbeddedFields()
     {
-        $this->queryHelper->disableIdDetection();
-        $this->queryHelper->query('59435d0b854a31bbad8da7aadf8ed385');
+        $organ = new Organ();
+        $organ->name = 'Head';
+        $organ->replacable = false;
+        
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion', 'head' => $organ]);
+        
+        $result = $this->queryHelper->query($lion->id, ['head.name' => true, 'head.replacable' => true]);
+        $this->assertEquals([['head' => ['name' => 'Head', 'replacable' => false]]], $result);
     }
-
-    /**
-     * Tests queryHelper->queryOne()
-     */
+    
+    public function testQueryUsingOr()
+    {
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
+        $tiger = $this->createTestEntity('Cat',['name' => 'Tiger']);
+        $dog = $this->createTestEntity('Dog',['name' => 'Bulldog']);
+        
+        $result = $this->queryHelper->query(['[name="Lion"]', $tiger->id]);
+        $this->assertEquals(2, $result->count());
+    }
+    
+    public function testQueryUsingOrAndCursorParameters()
+    {
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion', 'maxAge' => 10]);
+        $tiger = $this->createTestEntity('Cat',['name' => 'Tiger', 'maxAge' => 15]);
+        $dog = $this->createTestEntity('Dog',['name' => 'Bulldog', 'maxAge' => 17]);
+        
+        $result = $this->queryHelper->query(
+            ['[type="cat"]:sort(name ASC):limit(2)', 
+            '#'.$dog->id.':sort(name DESC):limit(1):offset(1)'],
+            'name'
+        );
+        
+        $this->assertEquals(['Lion', 'Tiger'], $result);
+    }
+    
+    public function testQueryWithEmptyQuery()
+    {
+        $this->assertEquals([], $this->queryHelper->query(''));
+        $this->assertEquals([], $this->queryHelper->query([]));
+    }
+    
     public function testQueryOne()
     {
-        // TODO Auto-generated queryHelperTest->testQueryOne()
-        $this->markTestIncomplete("queryOne test not implemented");
-        
-        $this->queryHelper->queryOne(/* parameters */);
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
+        $this->assertSame($lion, $this->queryHelper->queryOne($lion->id));
     }
-
+    
+    public function testQueryOneWithIdSelector()
+    {
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
+        $this->assertSame($lion, $this->queryHelper->queryOne('#'.$lion->id));
+    }
+    
+    public function testQueryOneWithOneField()
+    {
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
+        $this->assertEquals('Lion', $this->queryHelper->queryOne($lion->id, 'name'));
+    }
+    
+    public function testQueryOneWithIdField()
+    {
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
+        $this->assertEquals($lion->id, $this->queryHelper->queryOne($lion->id, 'id'));
+    }
+    
+    public function testQueryOneWithMultipleFields()
+    {
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion', 'canFly' => false]);
+        $result = $this->queryHelper->queryOne($lion->id, ['name' => true, 'canFly' => true]);
+        
+        $this->assertEquals(
+            ['name' => 'Lion', 'canFly' => false], 
+            $result);
+    }
+    
+    public function testQueryOneWithEmptyQuery()
+    {
+        $this->assertEquals(null, $this->queryHelper->queryOne(''));
+        $this->assertEquals(null, $this->queryHelper->queryOne([]));
+    }
+    
     /**
      * Tests queryHelper->count()
      */
     public function testCount()
     {
-        // TODO Auto-generated queryHelperTest->testCount()
-        $this->markTestIncomplete("count test not implemented");
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
+        $tiger = $this->createTestEntity('Cat',['name' => 'Tiger']);
+        $bulldog = $this->createTestEntity('Dog',['name' => 'Bulldog']);
         
-        $this->queryHelper->count(/* parameters */);
+        $this->assertEquals(2, $this->queryHelper->count('[type=cat]'));
+    }
+    
+    public function testCountWithOffset()
+    {
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
+        $tiger = $this->createTestEntity('Cat',['name' => 'Tiger']);
+        $bulldog = $this->createTestEntity('Dog',['name' => 'Bulldog']);
+        $grazydog = $this->createTestEntity('Dog',['name' => 'Grazydog']);
+        
+        $this->assertEquals(2, $this->queryHelper->count(':offset(2)'));
+    }
+    
+    public function testCountWithLimit()
+    {
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
+        $tiger = $this->createTestEntity('Cat',['name' => 'Tiger']);
+        $bulldog = $this->createTestEntity('Dog',['name' => 'Bulldog']);
+        $grazydog = $this->createTestEntity('Dog',['name' => 'Grazydog']);
+    
+        $this->assertEquals(3, $this->queryHelper->count(':limit(3)'));
     }
 
     /**
@@ -139,76 +274,13 @@ class QueryHelperTest extends AbstractTestCase
      */
     public function testExists()
     {
-        // TODO Auto-generated queryHelperTest->testExists()
-        $this->markTestIncomplete("exists test not implemented");
-        
-        $this->queryHelper->exists(/* parameters */);
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
+        $this->assertTrue($this->queryHelper->exists($lion->id));
     }
-
-    /**
-     * Tests queryHelper->findBySelector()
-     */
-    public function testFindBySelector()
+    
+    public function testNotExistsIfEntityDoesNotExist()
     {
-        // TODO Auto-generated queryHelperTest->testFindBySelector()
-        $this->markTestIncomplete("findBySelector test not implemented");
-        
-        $this->queryHelper->findBySelector(/* parameters */);
-    }
-
-    /**
-     * Tests queryHelper->findOneBySelector()
-     */
-    public function testFindOneBySelector()
-    {
-        // TODO Auto-generated queryHelperTest->testFindOneBySelector()
-        $this->markTestIncomplete("findOneBySelector test not implemented");
-        
-        $this->queryHelper->findOneBySelector(/* parameters */);
-    }
-
-    /**
-     * Tests queryHelper->countBySelector()
-     */
-    public function testCountBySelector()
-    {
-        // TODO Auto-generated queryHelperTest->testCountBySelector()
-        $this->markTestIncomplete("countBySelector test not implemented");
-        
-        $this->queryHelper->countBySelector(/* parameters */);
-    }
-
-    /**
-     * Tests queryHelper->findByArray()
-     */
-    public function testFindByArray()
-    {
-        // TODO Auto-generated queryHelperTest->testFindByArray()
-        $this->markTestIncomplete("findByArray test not implemented");
-        
-        $this->queryHelper->findByArray(/* parameters */);
-    }
-
-    /**
-     * Tests queryHelper->findOneByArray()
-     */
-    public function testFindOneByArray()
-    {
-        // TODO Auto-generated queryHelperTest->testFindOneByArray()
-        $this->markTestIncomplete("findOneByArray test not implemented");
-        
-        $this->queryHelper->findOneByArray(/* parameters */);
-    }
-
-    /**
-     * Tests queryHelper->countByArray()
-     */
-    public function testCountByArray()
-    {
-        // TODO Auto-generated queryHelperTest->testCountByArray()
-        $this->markTestIncomplete("countByArray test not implemented");
-        
-        $this->queryHelper->countByArray(/* parameters */);
+        $this->assertFalse($this->queryHelper->exists(['type' => 'cat']));
     }
 
     /**
@@ -216,21 +288,54 @@ class QueryHelperTest extends AbstractTestCase
      */
     public function testIsEmptyQueryParam()
     {
-        // TODO Auto-generated queryHelperTest->testIsEmptyQueryParam()
-        $this->markTestIncomplete("isEmptyQueryParam test not implemented");
-        
-        $this->queryHelper->isEmptyQueryParam(/* parameters */);
+        $this->assertTrue($this->queryHelper->isEmptyQueryParam(null));
+        $this->assertTrue($this->queryHelper->isEmptyQueryParam(""));
+        $this->assertTrue($this->queryHelper->isEmptyQueryParam(" "));
+        $this->assertTrue($this->queryHelper->isEmptyQueryParam([]));
+    }
+    
+    public function testIsNotEmptyQueryParam()
+    {
+        $this->assertFalse($this->queryHelper->isEmptyQueryParam('*'));
+        $this->assertFalse($this->queryHelper->isEmptyQueryParam('a'));
+        $this->assertFalse($this->queryHelper->isEmptyQueryParam('0'));
+        $this->assertFalse($this->queryHelper->isEmptyQueryParam(false));
+        $this->assertFalse($this->queryHelper->isEmptyQueryParam(['a']));
+    }
+
+    public function testEnableMongoIdDetection()
+    {
+        $this->queryHelper->enableIdDetection(QueryHelper::ID_MONGO);
+
+        $selector = '112233445566778811223344';
+        $query = $this->queryHelper->parse($selector);
+        $this->assertEquals(['_id' => $selector], $query['query']);
+    }
+    
+    public function testEnableUuid3Detection()
+    {
+        $this->queryHelper->enableIdDetection(QueryHelper::ID_UUID3);
+
+        $selector = '11223344556677881122334412345678';
+        $query = $this->queryHelper->parse($selector);
+        $this->assertEquals(['_id' => $selector], $query['query']);
+    }
+    
+    public function testEnableUuid5Detection()
+    {
+        $this->queryHelper->enableIdDetection(QueryHelper::ID_UUID5);
+
+        $selector = '11223344556677881122334412345678';
+        $query = $this->queryHelper->parse($selector);
+        $this->assertEquals(['_id' => $selector], $query['query']);
     }
 
     /**
-     * Tests queryHelper->enableIdDetection()
+     * @expectedException InvalidArgumentException
      */
-    public function testEnableIdDetection()
+    public function testEnableUnrecognizedIdDetection()
     {
-        // TODO Auto-generated queryHelperTest->testEnableIdDetection()
-        $this->markTestIncomplete("enableIdDetection test not implemented");
-        
-        $this->queryHelper->enableIdDetection(/* parameters */);
+        $this->queryHelper->enableIdDetection(0);
     }
 
     /**
