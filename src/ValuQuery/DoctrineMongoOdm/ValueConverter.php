@@ -5,6 +5,7 @@ use Doctrine\ODM\MongoDB\Types\Type;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\Common\Persistence\Mapping\ClassMetadata;
 use ArrayAccess;
+use Doctrine\ODM\MongoDB\Mapping\ClassMetadataInfo;
 
 class ValueConverter
 {
@@ -76,9 +77,7 @@ class ValueConverter
                 } elseif($meta->hasAssociation($fieldName)) {
                     
                     // Map PHP attribute name to database field name
-                    if ($fieldName !== $meta->getIdentifier() && isset($meta->fieldMappings[$fieldName])) {
-                        $fields[$index] = $meta->fieldMappings[$fieldName]['name'];
-                    }
+                    $fields[$index] = $this->mapField($meta, $fieldName, $mode);
                 
                     $meta = $this->getDocumentManager()
                         ->getClassMetadata($meta->getAssociationTargetClass($fieldName));
@@ -112,9 +111,7 @@ class ValueConverter
         $meta = $this->getDocumentManager()->getClassMetadata($documentName);
         
         // Map field
-        if ($field !== $meta->getIdentifier() && isset($meta->fieldMappings[$field])) {
-            $field = $meta->fieldMappings[$field]['name'];
-        }
+        $field = $this->mapField($meta, $field, $mode);
         
         // Map _id automatically to correct identifier field name
         // (_id is mostly for internal usage)
@@ -203,5 +200,30 @@ class ValueConverter
         } else {
             return null;
         }
+    }
+    
+    /**
+     * Map field to/from database field name
+     * 
+     * @param ClassMetadataInfo $meta
+     * @param string $fieldName
+     * @param int $mode
+     * @return string Mapped field name
+     */
+    private function mapField(ClassMetadataInfo $meta, $fieldName, $mode)
+    {
+        if ($fieldName !== $meta->getIdentifier()) {
+            if ($mode === self::CONVERT_TO_DB && isset($meta->fieldMappings[$fieldName])) {
+                return $meta->fieldMappings[$fieldName]['name'];
+            } else {
+                foreach ($meta->fieldMappings as $phpFieldName => $specs) {
+                    if (isset($specs['name']) && $specs['name'] === $fieldName) {
+                        return $phpFieldName;
+                    }
+                }
+            }
+        }
+        
+        return $fieldName;
     }
 }
