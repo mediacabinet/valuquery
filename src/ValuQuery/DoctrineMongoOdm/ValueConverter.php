@@ -45,12 +45,38 @@ class ValueConverter
      * Convert value to database format
      * 
      * @param string $documentName
-     * @param string $field
-     * @param mixed $value
+     * @param string $field Name of the field
+     * @param mixed $value Value
      */
     public function convertToDatabase($documentName, &$field, &$value)
     {
         return $this->splitFieldAndConvert($documentName, $field, $value, self::CONVERT_TO_DB);
+    }
+    
+    /**
+     * Convert array of DB values to PHP format
+     * 
+     * @param string $documentName
+     * @param array $data DB data
+     */
+    public function convertArrayToPhp($documentName, array &$data)
+    {
+        $meta = $this->getDocumentManager()->getClassMetadata($documentName);
+        
+        foreach ($data as $fieldName => &$value) {
+            $mappedField = $this->mapField($meta, $fieldName, self::CONVERT_TO_PHP);
+            
+            if($meta->hasAssociation($mappedField) && is_array($value)) {
+                $this->convertArrayToPhp($meta->getAssociationTargetClass($mappedField), $value);
+            } else {
+                $this->convert($documentName, $mappedField, $fieldName, $value, self::CONVERT_TO_PHP);
+            }
+            
+            if ($mappedField !== $fieldName) {
+                $data[$mappedField] = $data[$fieldName];
+                unset($data[$fieldName]);
+            }
+        }
     }
     
     /**
@@ -59,9 +85,8 @@ class ValueConverter
      * @param string $documentName
      * @param string $field
      * @param mixed $value
-     * @param int $mode
      */
-    protected function splitFieldAndConvert($documentName, &$field, &$value, $mode)
+    protected function splitFieldAndConvert($documentName, &$field, &$value)
     {
         $fields = explode('.', $field);
         
@@ -70,15 +95,11 @@ class ValueConverter
             
             foreach ($fields as $index => $fieldName) {
                 
+                $mappedField = $this->mapField($meta, $fieldName, self::CONVERT_TO_DB);
+                
                 if($index === (sizeof($fields)-1)) {
-                    $this->convert($meta->name, $fieldName, $value, $mode);
-                
-                    $fields[$index] = $fieldName;
+                    $this->convert($meta->name, $fieldName, $mappedField, $value, self::CONVERT_TO_DB);
                 } elseif($meta->hasAssociation($fieldName)) {
-                    
-                    // Map PHP attribute name to database field name
-                    $fields[$index] = $this->mapField($meta, $fieldName, $mode);
-                
                     $meta = $this->getDocumentManager()
                         ->getClassMetadata($meta->getAssociationTargetClass($fieldName));
                 
@@ -86,13 +107,15 @@ class ValueConverter
                         break;
                     }
                 }
+                
+                $fields[$index] = $mappedField;
             }
             
             // Apply field name mapping
             $field = implode('.', $fields);
-            
         } else {
-            return $this->convert($documentName, $field, $value, $mode);
+            $mappedField = $this->mapField($meta, $fieldName, self::CONVERT_TO_DB);
+            return $this->convert($documentName, $field, $mappedField, $value, self::CONVERT_TO_DB);
         }
     }
 
@@ -100,71 +123,81 @@ class ValueConverter
      * Convert value
      * 
      * @param string $documentName
+     * @param string $phpField
      * @param string $field
      * @param mixed $value
      * @param int $mode
      */
-    protected function convert($documentName, &$field, &$value, $mode)
+    protected function convert($documentName, $phpField, &$field, &$value, $mode)
     {
-        $fieldName = $field;
-        
         $meta = $this->getDocumentManager()->getClassMetadata($documentName);
-        
-        // Map field
-        $field = $this->mapField($meta, $field, $mode);
         
         // Map _id automatically to correct identifier field name
         // (_id is mostly for internal usage)
-        if ($fieldName === '_id') {
-            $fieldName = $meta->getIdentifier();
+        if ($phpField === '_id') {
+            $phpField = $meta->getIdentifier();
         }
         
         // Do nothing if identifier and value is a boolean false
-        if ($fieldName === $meta->getIdentifier() && $value === false) {
+        if ($phpField === $meta->getIdentifier() && $value === false) {
             return;
         }
         
         // Field is a discriminator field, treat it as a string
-        if ($fieldName === $meta->discriminatorField) {
+        if ($phpField === $meta->discriminatorField) {
             $value = strval($value);
             return;
         }
 
         // Field is actually an association, treat it as an ID
         // based on target document's metadata
-        if($meta->hasAssociation($fieldName)) {
-            $fieldMapping = $meta->getFieldMapping($fieldName);
+        if($meta->hasAssociation($phpField)) {
+            $fieldMapping = $meta->getFieldMapping($phpField);
             $targetMeta = $this->getDocumentManager()
                 ->getClassMetadata($fieldMapping['targetDocument']);
 
             $type = $this->resolveFieldType($targetMeta, $targetMeta->getIdentifier());
 
             // If we're using DBRefs, add .$db to field name
-            if (!isset($fieldMapping['simple']) || $fieldMapping['simple'] !== true) {
+            if ($mode === self::CONVERT_TO_DB
+                && (!isset($fieldMapping['simple']) || $fieldMapping['simple'] !== true)) {
                 $field .= '.$id';
             }
 
-            // Finally, convert ID to DB value
-            if (is_array($value)) {
-                foreach ($value as $key => &$id) {
-                    $value[$key] = $type->convertToDatabaseValue($id);
-                }
-            } else {
-                $value = $type->convertToDatabaseValue($value);
-            }
+            // Finally, convert to DB value
+            $this->convertValue($type, $value, $mode);
             
             return;
         }
 
         // Find field type from the child class metadata
-        $type = $this->resolveFieldType($meta, $fieldName);
+        $type = $this->resolveFieldType($meta, $phpField);
         
         // Convert to DB value, unless we've found an association
         if ($type) {
-            if (is_array($value)) {
+            $this->convertValue($type, $value, $mode);
+        }
+    }
+    
+    /**
+     * Internal function for converting values to/from DB
+     *
+     * @param Type $type
+     * @param mixed $value
+     * @param int $mode
+     */
+    private function convertValue(Type $type, &$value, $mode) {
+        if (is_array($value)) {
+            if ($mode === self::CONVERT_TO_DB) {
                 $value = array_map([$type, 'convertToDatabaseValue'], $value);
             } else {
+                $value = array_map([$type, 'convertToPHPValue'], $value);
+            }
+        } else {
+            if ($mode === self::CONVERT_TO_DB) {
                 $value = $type->convertToDatabaseValue($value);
+            } else {
+                $value = $type->convertToPHPValue($value);
             }
         }
     }
@@ -213,8 +246,10 @@ class ValueConverter
     private function mapField(ClassMetadataInfo $meta, $fieldName, $mode)
     {
         if ($fieldName !== $meta->getIdentifier()) {
-            if ($mode === self::CONVERT_TO_DB && isset($meta->fieldMappings[$fieldName])) {
-                return $meta->fieldMappings[$fieldName]['name'];
+            if ($mode === self::CONVERT_TO_DB) {
+                if (isset($meta->fieldMappings[$fieldName])) {
+                    return $meta->fieldMappings[$fieldName]['name'];
+                }
             } else {
                 foreach ($meta->fieldMappings as $phpFieldName => $specs) {
                     if (isset($specs['name']) && $specs['name'] === $fieldName) {
