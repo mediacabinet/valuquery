@@ -90,7 +90,7 @@ abstract class Animal{
 	
 	/**
 	 * @ODM\ReferenceOne(targetDocument="Animal", simple=true)
-	 * @var ArrayCollection
+	 * @var Animal
 	 */
 	public $root;
 	
