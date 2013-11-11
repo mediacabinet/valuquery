@@ -191,6 +191,46 @@ class QueryHelperTest extends AbstractTestCase
         $this->assertEquals(['Lion', 'Tiger'], $result);
     }
     
+    public function testQueryWithEmbeddedField()
+    {
+        $head1 = new Organ();
+        $head1->name = 'Head';
+        $head1->replacable = false;
+        
+        $head2 = new Organ();
+        $head2->name = 'Large head';
+        $head2->replacable = false;
+    
+        $this->createTestEntity('Cat',['head' => $head1]);
+        $this->createTestEntity('Cat',['head' => $head2]);
+    
+        $result = $this->queryHelper->query('*', ['head.name' => true]);
+    
+        $this->assertEquals([
+            ['head' => ['name' => 'Head']],
+            ['head' => ['name' => 'Large head']]
+            ], 
+            $result);
+        
+        $result = $this->queryHelper->query('*', 'head.name');
+        
+        $this->assertEquals([
+            'Head',
+            'Large head'
+            ],
+            $result);
+    }
+    
+    public function testQueryAssociation()
+    {
+        $basicCat = $this->createTestEntity('Cat',['name' => 'Cat']);
+        $superCat = $this->createTestEntity('Cat',['root' => $basicCat, 'name' => 'Supercat']);
+        
+        $result = $this->queryHelper->query('*', 'root');
+        
+        $this->assertEquals([$basicCat->id], $result);
+    }
+    
     public function testQueryWithEmptyQuery()
     {
         $this->assertEquals([], $this->queryHelper->query(''));
@@ -229,6 +269,19 @@ class QueryHelperTest extends AbstractTestCase
         $this->assertEquals(
             ['name' => 'Lion', 'canFly' => false], 
             $result);
+    }
+    
+    public function testQueryOneWithEmbeddedField()
+    {
+        $organ = new Organ();
+        $organ->name = 'Head';
+        $organ->replacable = false;
+        
+        $cat = $this->createTestEntity('Cat',['head' => $organ]);
+        
+        $result = $this->queryHelper->queryOne($cat->id, ['head.name' => true]);
+        
+        $this->assertEquals(['head' => ['name' => 'Head']], $result);
     }
     
     public function testQueryOneWithEmptyQuery()
