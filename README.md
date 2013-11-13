@@ -71,7 +71,7 @@ class FileRepository  extends DocumentRepository
 
 Now you can use your repository to perform CSS based queries and more!
 
-Imagine, you want to fetch the title's of your hi-res videos:
+Imagine, you want to fetch the titles of your hi-res videos:
 ```php
 $titles = $fileRepository->query('.video.hires', 'title');
 ```
