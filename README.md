@@ -25,14 +25,16 @@ $queryBuilder->getEventManager()->attach($listener);
 ```php
 $query = $queryBuilder->query('#5281d29b4c16801609000191');
 ```
+Contents of `$query`:
 ```php
-['query' => ['_id' => MongoID('5281d29b4c16801609000191')]]
+['query' => ['_id' => new MongoID('5281d29b4c16801609000191')]]
 ```
 
 **Querying documents by class:**
 ```php
 $query = $queryBuilder->query('.video');
 ```
+Contents of `$query`:
 ```php
 ['query' => ['classes' => ['$in' => ['video']]]]
 ```
@@ -41,11 +43,39 @@ $query = $queryBuilder->query('.video');
 ```php
 $query = $queryBuilder->query('[name^="John"]:sort(age asc):limit(1):skip(1)');
 ```
+Contents of `$query`:
 ```php
 [
-  'query' => ['name' => MongoRegex("/^John/")], 
+  'query' => ['name' => new MongoRegex("/^John/")], 
   'sort' => ["age" => 1],
 	'limit' => 1,
 	'skip' => 1
 ]
+```
+
+## Using ValuQuery with Doctrine MongoDB ODM
+
+It is easiest to use ValuQuery with ODM by integrating it to DocumentRepository by extending `ValuQuery\DoctrineMongoOdm\DocumentRepository`. The class provides convenient methods `query`, `queryOne`, `count` and `exists`. If you don't want to use DocumentRepository, you should use `QueryHelper`, which provides the same methods. Actually, DocumentRepository uses QueryHelper internally.
+
+### Using DocumentRepository
+
+Set up your custom repository by extending `ValuQuery\DoctrineMongoOdm\DocumentRepository`:
+```php
+use ValuQuery\DoctrineMongoOdm\DocumentRepository;
+
+class FileRepository  extends DocumentRepository
+{
+//...
+}
+```
+
+Now you can use your repository to perform CSS based queries and more!
+
+Imagine, you want to fetch the title's of your hi-res videos:
+```php
+$titles = $fileRepository->query('.video.hires', 'title');
+```
+Contents of `$titles`:
+```php
+['Best football scene HD', 'Super Holiday HD', 'In HD: amazing nature']
 ```
