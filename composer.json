@@ -1,6 +1,6 @@
 {
 	"name" : "valu/valuquery",
-	"description" : "Valu query module",
+	"description" : "Valu query library",
 	"version" : "1.0.0",
 	"type" : "library",
 	"keywords" : [
