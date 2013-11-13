@@ -5,7 +5,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
 
 /**
- * @ODM\Document
+ * @ODM\Document(repositoryClass="ValuQueryTest\TestAsset\CategoryRepository")
  */
 class Category{
  
