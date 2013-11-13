@@ -3,7 +3,6 @@ namespace ValuQueryTest\DoctrineMongoOdm;
 
 use ValuQuery\DoctrineMongoOdm\QueryHelper;
 use ValuQueryTest\TestAsset\Organ;
-use ValuQuery\QueryBuilder\Event\SimpleSelectorEvent;
 
 /**
  * QueryHelper test case.
