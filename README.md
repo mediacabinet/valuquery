@@ -1,5 +1,7 @@
 # ValuQuery
 
+[![Build Status](https://travis-ci.org/mediacabinet/valuquery.png?branch=master)](http://travis-ci.org/mediacabinet/valuquery)
+
 ValuQuery is a library that provides CSS selector based query language support. ValuQuery can be used with various databases, including NoSQL and relative databases. Currently, MongoDB is best supported and there is also support for Doctrine's object-document mapper for MongoDB.
 
 ## Examples
@@ -44,4 +46,3 @@ $query = $queryBuilder->query('[age>14]');
 ```css
 #<ObjectId>
 ```
-
