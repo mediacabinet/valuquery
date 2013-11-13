@@ -3,6 +3,7 @@ namespace ValuQuery\DoctrineMongoOdm;
 
 use ValuQuery\Selector\Parser\SelectorParser;
 use ValuQuery\QueryBuilder\QueryBuilder;
+use ValuQuery\DoctrineMongoOdm\Listener\QueryListener;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\MongoDB\Cursor as BaseCursor;
 use Doctrine\ODM\MongoDB\Cursor;
@@ -10,6 +11,7 @@ use Doctrine\ODM\MongoDB\LoggableCursor;
 use Doctrine\MongoDB\LoggableCursor as BaseLoggableCursor;
 use ArrayObject;
 use ValuQuery\DoctrineMongoOdm\Exception\InvalidQueryException;
+use ValuQuery\DoctrineMongoOdm\Listener\FilterListener;
 
 /**
  * DoctineMongoDB ODM query helper
@@ -128,6 +130,13 @@ class QueryHelper
      * @var QueryListener
      */
     protected $queryListener;
+    
+    /**
+     * Available query filters
+     * 
+     * @var array
+     */
+    protected $filters;
     
     /**
      * Value converter instance
@@ -289,6 +298,22 @@ class QueryHelper
     }
     
     /**
+     * @return multitype:
+     */
+    public function getFilters()
+    {
+        return $this->filters;
+    }
+
+	/**
+     * @param multitype: $filters
+     */
+    public function setFilters($filters)
+    {
+        $this->filters = $filters;
+    }
+
+	/**
      * Retrieve query builder instance
      * 
      * @return QueryBuilder
@@ -319,6 +344,29 @@ class QueryHelper
     }
     
     /**
+     * Attach filter listener to query builder
+     * 
+     * Filter listener listens to applyPseudoSelector event and
+     * enables/disables document manager filters when correct
+     * pseudo selector is used.
+     * 
+     * After query, restoreFilters should be called for the listener.
+     * 
+     * @return \ValuQuery\DoctrineMongoOdm\Listener\FilterListener|NULL
+     */
+    private function attachFilterListener()
+    {
+        if (sizeof($this->getFilters())) {
+            $listener = new FilterListener($this->getDocumentManager(), $this->getFilters());
+            $this->getQueryBuilder()->getEventManager()->attach('applyPseudoSelector', $listener);
+            
+            return $listener;
+        }
+        
+        return null;
+    }
+    
+    /**
      * Performs query
      * 
      * @param mixed $query
@@ -337,37 +385,64 @@ class QueryHelper
             }
         }
         
-        if (is_string($query)) {
-            return $this->doFindBySelector($query, $fields, $mode);
-        } elseif(is_array($query)) {
-            
-            if(empty($query) || $this->isAssociativeArray($query)) {
-                return $this->doFindByArray($query, $fields, $mode);
-            } else {
-                $mainQuery = new ArrayObject();
-                $mainQuery['query']['$or'] = [];
+        // Attach filter listener, if filters are enabled
+        $filterListener = $this->attachFilterListener();
+        
+        try {
+            if (is_string($query)) {
+                $result = $this->doFindBySelector($query, $fields, $mode);
                 
-                $this->applyFields($mainQuery, $fields);
-                
-                foreach ($query as $selector) {
-                    $subQuery = new ArrayObject();
-                    $this->applySelector($subQuery, $selector, true);
-                    
-                    $mainQuery['query']['$or'][] = $subQuery['query'];
-                    
-                    foreach (['sort', 'limit', 'skip'] as $copy) {
-                        if (isset($subQuery[$copy]) && !isset($mainQuery[$copy])) {
-                            $mainQuery[$copy] = $subQuery[$copy];
-                        }
-                    }
+                // Restore filters, applied by filter listener
+                if ($filterListener) {
+                    $filterListener->restoreFilters();
                 }
                 
-                return $this->process($mainQuery, $fields, $mode);
+                return $result;
+            } elseif(is_array($query)) {
+                
+                if(empty($query) || $this->isAssociativeArray($query)) {
+                    return $this->doFindByArray($query, $fields, $mode);
+                } else {
+                    $mainQuery = new ArrayObject();
+                    $mainQuery['query']['$or'] = [];
+                    
+                    $this->applyFields($mainQuery, $fields);
+                    
+                    foreach ($query as $selector) {
+                        $subQuery = new ArrayObject();
+                        $this->applySelector($subQuery, $selector, true);
+                        
+                        $mainQuery['query']['$or'][] = $subQuery['query'];
+                        
+                        foreach (['sort', 'limit', 'skip'] as $copy) {
+                            if (isset($subQuery[$copy]) && !isset($mainQuery[$copy])) {
+                                $mainQuery[$copy] = $subQuery[$copy];
+                            }
+                        }
+                    }
+                    
+                    $result = $this->process($mainQuery, $fields, $mode);
+                    
+                    // Restore filters, applied by filter listener
+                    if ($filterListener) {
+                        $filterListener->restoreFilters();
+                    }
+                    
+                    return $result;
+                }
+            } else {
+                throw new InvalidQueryException(
+                    sprintf('Unrecognized query format; string or array expected, %s received', gettype($query))
+                );
             }
-        } else {
-            throw new InvalidQueryException(
-                sprintf('Unrecognized query format; string or array expected, %s received', gettype($query))
-            );
+        } catch (\Exception $e) {
+            
+            // Restore filters, applied by filter listener
+            if ($filterListener) {
+                $filterListener->restoreFilters();
+            }
+            
+            throw $e;
         }
     }
     

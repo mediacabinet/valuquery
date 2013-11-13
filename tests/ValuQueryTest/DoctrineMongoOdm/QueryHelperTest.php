@@ -237,6 +237,50 @@ class QueryHelperTest extends AbstractTestCase
         $this->assertEquals([], $this->queryHelper->query([]));
     }
     
+    public function testQueryWithPseudoSelectorFilter()
+    {
+        $this->dm->getConfiguration()->addFilter(
+                'nonwaterbreedable',
+                'ValuQueryTest\TestAsset\Filter\NonWaterBreedableFilter');
+    
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion', 'isAbleToBreedUnderWater' => false]);
+        $salmon = $this->createTestEntity('Fish',['name' => 'Salmon', 'isAbleToBreedUnderWater' => true]);
+    
+        $this->queryHelper->setFilters(['nonwaterbreedable']);
+        $result = $this->queryHelper->query(':filter(nonwaterbreedable)', 'name');
+        $this->assertEquals(['Lion'], $result);
+    }
+    
+    public function testOrQueryFilterIsAppliedGlobally()
+    {
+        $this->dm->getConfiguration()->addFilter(
+                'nonwaterbreedable',
+                'ValuQueryTest\TestAsset\Filter\NonWaterBreedableFilter');
+    
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion', 'isAbleToBreedUnderWater' => false]);
+        $salmon = $this->createTestEntity('Fish',['name' => 'Salmon', 'isAbleToBreedUnderWater' => true]);
+    
+        $this->queryHelper->setFilters(['nonwaterbreedable']);
+        $result = $this->queryHelper->query(['[name=Lion]:filter(nonwaterbreedable)', '[name=Salmon]'], 'name');
+        $this->assertEquals(['Lion'], $result);
+    }
+    
+    public function testPreviouslyEnabledFilterIsNotAppliedToNewQuery()
+    {
+        $this->dm->getConfiguration()->addFilter(
+                'nonwaterbreedable',
+                'ValuQueryTest\TestAsset\Filter\NonWaterBreedableFilter');
+        
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion', 'isAbleToBreedUnderWater' => false]);
+        $salmon = $this->createTestEntity('Fish',['name' => 'Salmon', 'isAbleToBreedUnderWater' => true]);
+        
+        $this->queryHelper->setFilters(['nonwaterbreedable']);
+        $this->queryHelper->query(':filter(nonwaterbreedable)', 'name');
+        
+        $result = $this->queryHelper->query('*', 'name');
+        $this->assertEquals(['Lion', 'Salmon'], $result);
+    }
+    
     public function testQueryOne()
     {
         $lion = $this->createTestEntity('Cat',['name' => 'Lion']);

@@ -1,6 +1,8 @@
 <?php
-namespace ValuQuery\DoctrineMongoOdm;
+namespace ValuQuery\DoctrineMongoOdm\Listener;
 
+use ValuQuery\DoctrineMongoOdm\Exception;
+use ValuQuery\DoctrineMongoOdm\ValueConverter;
 use ValuQuery\QueryBuilder\Event\SimpleSelectorEvent;
 use ValuQuery\QueryBuilder\Event\QueryBuilderEvent;
 use ValuQuery\MongoDb\QueryListener as BaseListener;

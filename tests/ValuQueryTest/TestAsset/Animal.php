@@ -8,7 +8,7 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
  * @ODM\Document
  * @ODM\InheritanceType("SINGLE_COLLECTION")
  * @ODM\DiscriminatorField(fieldName="type")
- * @ODM\DiscriminatorMap({"dog"="ValuQueryTest\TestAsset\Dog", "cat"="ValuQueryTest\TestAsset\Cat"})
+ * @ODM\DiscriminatorMap({"dog"="ValuQueryTest\TestAsset\Dog", "cat"="ValuQueryTest\TestAsset\Cat", "fish"="ValuQueryTest\TestAsset\Fish"})
  */
 abstract class Animal{
  

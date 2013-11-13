@@ -1,7 +1,8 @@
 <?php
-namespace ValuQueryTest\DoctrineMongoOdm;
+namespace ValuQueryTest\DoctrineMongoOdm\Listener;
 
-use ValuQuery\DoctrineMongoOdm\QueryListener;
+use ValuQueryTest\DoctrineMongoOdm\AbstractTestCase;
+use ValuQuery\DoctrineMongoOdm\Listener\QueryListener;
 use ValuQuery\Selector\SimpleSelector\Element;
 use ValuQuery\QueryBuilder\Event\QueryBuilderEvent;
 use ValuQuery\QueryBuilder\Event\SimpleSelectorEvent;
