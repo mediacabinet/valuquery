@@ -121,7 +121,7 @@ class QueryHelperTest extends AbstractTestCase
         $this->assertSame($leopard, $result->current());
     }
     
-    public function testQueryByArrayUsingCursorParameters()
+    public function testQueryByArrayUsingCursorParametersAndSingleField()
     {
         $lion = $this->createTestEntity('Cat',['name' => 'Lion', 'maxAge' => 10]);
         $tiger = $this->createTestEntity('Cat',['name' => 'Tiger', 'maxAge' => 15]);
@@ -133,6 +133,37 @@ class QueryHelperTest extends AbstractTestCase
         );
     
         $this->assertEquals(['Lion', 'Tiger'], $result);
+    }
+    
+    public function testQueryByArrayUsingCursorParametersAndMultipleFields()
+    {
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion', 'maxAge' => 10]);
+        $tiger = $this->createTestEntity('Cat',['name' => 'Tiger', 'maxAge' => 15]);
+        $dog = $this->createTestEntity('Dog',['name' => 'Bulldog', 'maxAge' => 17]);
+    
+        $result = $this->queryHelper->query(
+                ['@sort' => ['name' => true], '@limit' => 2, '@offset' => 1],
+                ['name' => true, 'maxAge' => true]
+        );
+    
+        $this->assertEquals([['name' => 'Lion', 'maxAge' => 10], ['name' => 'Tiger', 'maxAge' => 15]], $result);
+    }
+    
+    public function testQueryByArrayUsingCursorParametersWithoutFields()
+    {
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion', 'maxAge' => 10]);
+        $tiger = $this->createTestEntity('Cat',['name' => 'Tiger', 'maxAge' => 15]);
+        $dog = $this->createTestEntity('Dog',['name' => 'Bulldog', 'maxAge' => 17]);
+    
+        $result = $this->queryHelper->query(
+                ['@sort' => ['name' => true], '@limit' => 2, '@offset' => 0]
+        );
+        
+        $result->next();
+        $this->assertSame($dog, $result->current());
+        
+        $result->next();
+        $this->assertSame($lion, $result->current());
     }
     
     public function testQueryField()
