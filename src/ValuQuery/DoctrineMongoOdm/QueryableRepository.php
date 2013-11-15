@@ -3,7 +3,7 @@ namespace ValuQuery\DoctrineMongoOdm;
 
 use Doctrine\ODM\MongoDB\DocumentRepository as BaseRepository;
 
-class DocumentRepository extends BaseRepository
+class QueryableRepository extends BaseRepository
 {
     
     /**

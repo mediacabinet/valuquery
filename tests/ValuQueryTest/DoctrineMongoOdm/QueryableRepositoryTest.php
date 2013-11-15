@@ -1,13 +1,13 @@
 <?php
 namespace ValuQueryTest\DoctrineMongoOdm;
 
-use ValuQuery\DoctrineMongoOdm\DocumentRepository;
+use ValuQuery\DoctrineMongoOdm\QueryableRepository;
 
-class DocumentRepositoryTest extends AbstractTestCase
+class QueryableRepositoryTest extends AbstractTestCase
 {
 
     /**
-     * @var DocumentRepository
+     * @var QueryableRepository
      */
     private $repository;
 

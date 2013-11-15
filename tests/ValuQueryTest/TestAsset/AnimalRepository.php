@@ -1,9 +1,9 @@
 <?php
 namespace ValuQueryTest\TestAsset;
 
-use ValuQuery\DoctrineMongoOdm\DocumentRepository;
+use ValuQuery\DoctrineMongoOdm\QueryableRepository;
 
-class AnimalRepository extends DocumentRepository
+class AnimalRepository extends QueryableRepository
 {
     
 }
