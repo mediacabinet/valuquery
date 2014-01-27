@@ -688,6 +688,11 @@ class QueryHelper
         $convertSingleField = is_string($fields);
         
         if ($mode == self::FIND_ONE) {
+            // Do not post-process objects
+            if (is_object($result)) {
+                return $result;
+            }
+            
             $this->getValueConverter()->convertArrayToPhp(
                 $this->getDocumentName(), $result);
             
@@ -708,6 +713,13 @@ class QueryHelper
             $data = [];
             
             foreach ($result as $documentData) {
+                
+                // Do not post-process objects
+                if (is_object($documentData)) {
+                    $data[] = $documentData;
+                    continue;
+                }
+                
                 $this->getValueConverter()->convertArrayToPhp(
                         $this->getDocumentName(), $documentData);
                 
