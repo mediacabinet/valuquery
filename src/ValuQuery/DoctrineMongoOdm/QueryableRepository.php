@@ -14,6 +14,27 @@ class QueryableRepository extends BaseRepository
     protected $queryHelper = null;
     
     /**
+     * Name of the field to match role selector
+     *
+     * @var string
+     */
+    protected $roleField = null;
+    
+    /**
+     * Name of the field to match class selector
+     *
+     * @var string
+     */
+    protected $classField = null;
+    
+    /**
+     * Name of the field to match path selector
+     *
+     * @var string
+     */
+    protected $pathField = null;
+    
+    /**
      * @see \ValuQuery\DoctrineMongoOdm\QueryHelper::query()
      */
     public function query($query, $fields = null)
@@ -46,6 +67,54 @@ class QueryableRepository extends BaseRepository
     }
     
     /**
+     * @return string
+     */
+    public function getRoleField()
+    {
+        return $this->roleField;
+    }
+    
+    /**
+     * @param string $roleField
+     */
+    public function setRoleField($roleField)
+    {
+        $this->roleField = $roleField;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getClassField()
+    {
+        return $this->classField;
+    }
+    
+    /**
+     * @param string $classField
+     */
+    public function setClassField($classField)
+    {
+        $this->classField = $classField;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getPathField()
+    {
+        return $this->pathField;
+    }
+    
+    /**
+     * @param string $pathField
+     */
+    public function setPathField($pathField)
+    {
+        $this->pathField = $pathField;
+    }
+    
+    /**
      * Retrieve query helper
      * 
      * @return \ValuQuery\DoctrineMongoOdm\QueryHelper
@@ -64,6 +133,24 @@ class QueryableRepository extends BaseRepository
                 } elseif (!isset($idMeta['strategy']) || strtoupper($idMeta['strategy']) === 'AUTO') {
                     $this->queryHelper->enableIdDetection(QueryHelper::ID_MONGO);
                 }
+            }
+            
+            if (($pathField = $this->getPathField()) != false) {
+                $this->queryHelper
+                     ->getDefaultQueryListener()
+                     ->setPathField($pathField);
+            }
+            
+            if (($classField = $this->getClassField()) != false) {
+                $this->queryHelper
+                     ->getDefaultQueryListener()
+                     ->setClassField($classField);
+            }
+            
+            if (($roleField = $this->getRoleField()) != false) {
+                $this->queryHelper
+                     ->getDefaultQueryListener()
+                     ->setRoleField($roleField);
             }
         }
         
