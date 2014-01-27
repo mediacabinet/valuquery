@@ -184,6 +184,14 @@ class QueryHelperTest extends AbstractTestCase
         $this->assertEquals([['name' => 'Lion', 'maxAge' => 15],['name' => 'Tomcat', 'maxAge' => 20]], $result);
     }
     
+    public function testQueryManyUsingInvalidFieldsSyntax()
+    {
+        $tomcat = $this->createTestEntity('Cat',['name' => 'Tomcat', 'maxAge' => 20]);
+        $result = $this->queryHelper->query('*', ['name', 'maxAge']);
+        $this->assertInternalType('array', $result);
+        $this->assertEquals(1, sizeof($result));
+    }
+    
     public function testQueryEmbeddedFields()
     {
         $organ = new Organ();
@@ -343,6 +351,13 @@ class QueryHelperTest extends AbstractTestCase
         $this->assertEquals(
             ['name' => 'Lion', 'canFly' => false], 
             $result);
+    }
+    
+    public function testQueryOneUsingInvalidFieldsSyntax()
+    {
+        $tomcat = $this->createTestEntity('Cat',['name' => 'Tomcat', 'maxAge' => 20]);
+        $result = $this->queryHelper->queryOne('*', ['name', 'maxAge']);
+        $this->assertSame($tomcat, $result);
     }
     
     public function testQueryOneWithEmbeddedField()
