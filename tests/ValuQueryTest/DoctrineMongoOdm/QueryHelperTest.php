@@ -78,6 +78,16 @@ class QueryHelperTest extends AbstractTestCase
         $this->assertSame($tiger, $result->current());
     }
     
+    public function testQueryByIdUsingArrayNotation()
+    {
+        $tiger = $this->createTestEntity('Cat',['name' => 'Tiger']);
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
+    
+        $result = $this->queryHelper->query(['id' => (string)$tiger->id]);
+        $result->next();
+        $this->assertSame($tiger, $result->current());
+    }
+    
     /**
      * @expectedException ValuQuery\DoctrineMongoOdm\Exception\UnknownElementException
      */
