@@ -66,7 +66,7 @@ class ValueConverter
         foreach ($data as $fieldName => &$value) {
             $mappedField = $this->mapField($meta, $fieldName, self::CONVERT_TO_PHP);
             
-            if($meta->hasAssociation($mappedField) && is_array($value)) {
+            if($meta->hasField($mappedField) && $meta->hasAssociation($mappedField) && is_array($value)) {
                 $this->convertArrayToPhp($meta->getAssociationTargetClass($mappedField), $value);
             } else {
                 $this->convert($documentName, $mappedField, $fieldName, $value, self::CONVERT_TO_PHP);
@@ -99,7 +99,7 @@ class ValueConverter
                 
                 if($index === (sizeof($fields)-1)) {
                     $this->convert($meta->name, $fieldName, $mappedField, $value, self::CONVERT_TO_DB);
-                } elseif($meta->hasAssociation($fieldName)) {
+                } elseif($meta->hasField($fieldName) && $meta->hasAssociation($fieldName)) {
                     $meta = $this->getDocumentManager()
                         ->getClassMetadata($meta->getAssociationTargetClass($fieldName));
                 
@@ -136,10 +136,14 @@ class ValueConverter
         // (_id is mostly for internal usage)
         if ($phpField === '_id') {
             $phpField = $meta->getIdentifier();
+            
+            if (is_array($phpField)) {
+                $phpField = array_shift($phpField);
+            }
         }
         
         // Do nothing if identifier and value is a boolean false
-        if ($phpField === $meta->getIdentifier() && $value === false) {
+        if ($this->isIdentifierField($phpField, $meta) && $value === false) {
             return;
         }
         
@@ -151,12 +155,18 @@ class ValueConverter
 
         // Field is actually an association, treat it as an ID
         // based on target document's metadata
-        if($meta->hasAssociation($phpField)) {
+        if($meta->hasField($phpField) && $meta->hasAssociation($phpField)) {
             $fieldMapping = $meta->getFieldMapping($phpField);
             $targetMeta = $this->getDocumentManager()
                 ->getClassMetadata($fieldMapping['targetDocument']);
+            
+            $identifier = $targetMeta->getIdentifier();
+            
+            if (is_array($identifier)) {
+                $identifier = array_shift($identifier);
+            }
 
-            $type = $this->resolveFieldType($targetMeta, $targetMeta->getIdentifier());
+            $type = $this->resolveFieldType($targetMeta, $identifier);
 
             // If we're using DBRefs, add .$db to field name
             if ($mode === self::CONVERT_TO_DB
@@ -245,7 +255,7 @@ class ValueConverter
      */
     private function mapField(ClassMetadataInfo $meta, $fieldName, $mode)
     {
-        if ($fieldName !== $meta->getIdentifier()) {
+        if ($this->isIdentifierField($fieldName, $meta)) {
             if ($mode === self::CONVERT_TO_DB) {
                 if (isset($meta->fieldMappings[$fieldName])) {
                     return $meta->fieldMappings[$fieldName]['name'];
@@ -260,5 +270,18 @@ class ValueConverter
         }
         
         return $fieldName;
+    }
+    
+    private function isIdentifierField($field, ClassMetadataInfo $meta)
+    {
+        $identifier = $meta->getIdentifier();
+        
+        if (is_string($identifier) && $identifier === $field) {
+            return true;
+        } else if (is_array($identifier) && in_array($field, $identifier)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

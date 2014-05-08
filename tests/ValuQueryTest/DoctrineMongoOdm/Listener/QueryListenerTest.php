@@ -247,7 +247,7 @@ class QueryListenerTest extends AbstractTestCase
     public function testAttributeQueryUsingMappedField()
     {
         $this->assertAttributeQueryEquals(
-            ['breedUw' => false],
+            ['isAbleToBreedUnderWater' => false],
             'isAbleToBreedUnderWater', Attribute::OPERATOR_EQUALS, false
         );
     }
@@ -255,7 +255,7 @@ class QueryListenerTest extends AbstractTestCase
     public function testAttributeQueryUsingMappedFieldInEmbeddedDocument()
     {
         $this->assertAttributeQueryEquals(
-            ['head.isInMainCirc' => false],
+            ['head.isPartOfMainBloodCirculation' => false],
             'head.isPartOfMainBloodCirculation', Attribute::OPERATOR_EQUALS, false
         );
     }
