@@ -30,11 +30,10 @@ class QueryBuilderTest extends TestCase
         });
         
         $selector = $this->parseSelector('a > b');
-        $this->queryBuilder->build($selector, new \ArrayObject());
+        $this->queryBuilder->build($selector);
         $this->assertEquals(1, $triggered);
         $this->assertInstanceOf('ValuQuery\QueryBuilder\Event\SelectorEvent', $event);
-        $this->assertSame($selector->getLastSequence(), $event->getParam('childSequence'));
-        $this->assertSame($selector->getFirstSequence(), $event->getParam('sequence'));
+        $this->assertSame($selector->getFirstSequence(), $event->getSequence());
     }
     
     public function testBuildInvokesPrepareQueryEvent()
@@ -48,22 +47,20 @@ class QueryBuilderTest extends TestCase
         });
         
         $selector = $this->parseSelector('a > b');
-        $this->queryBuilder->build($selector, new \ArrayObject());
+        $this->queryBuilder->build($selector);
         $this->assertEquals(1, $triggered);
         $this->assertInstanceOf('ValuQuery\QueryBuilder\Event\QueryBuilderEvent', $event);
     }
     
     public function testBuildInvokesFinalizeQueryEvent()
     {
-        $query = new \ArrayObject(['finalized' => false]);
-        
         $this->queryBuilder->getEventManager()->attach('finalizeQuery', function($e) {
             $q = $e->getQuery();
             $q['finalized'] = true;
         });
         
         $selector = $this->parseSelector('a > b');
-        $this->queryBuilder->build($selector, $query);
+        $query = $this->queryBuilder->build($selector);
         $this->assertTrue($query['finalized']);
     }
     
@@ -85,14 +82,39 @@ class QueryBuilderTest extends TestCase
         $this->assertEquals(['vehicle' => 'car'], $query->getArrayCopy());
     }
     
-    /**
-     * @expectedException ValuQuery\QueryBuilder\Exception\InvalidQueryException
-     */
-    public function testBuildQueryFailsWithQueryAsNonObject()
+    public function testBuildQueryWithChildSequences()
     {
-        $this->queryBuilder->build($this->parseSelector('.videos'), '');
-    }
+        $this->queryBuilder->getEventManager()->attach('prepareQuery', function($e) {
+            $e->setQuery(new \ArrayObject());
+        });
+        
+        $this->queryBuilder->getEventManager()->attach('applyClassSelector', function($e) {
+            $q = $e->getQuery();
+            $q['class'] = $e->getSimpleSelector()->getCondition();
+            return true;
+        });
+        
+        $this->queryBuilder->getEventManager()->attach('combineSequence', function($e) {
+            $q = $e->getQuery();
+            $sequence = $e->getSequence();
+            $combinator = $sequence->getChildCombinator();
+            
+            if ($combinator === Selector::COMBINATOR_CHILD) {
+                $q['category'] = $sequence->__toString();
+                return true;
+            } else if ($combinator === Selector::COMBINATOR_DESCENDENT) {
+                $q['type'] = $sequence->__toString();
+                return true;
+            }
+        });
     
+        $selector = $this->parseSelector('vehicles>car .crossover');
+        $query = $this->queryBuilder->build($selector);
+
+        $this->assertInstanceOf('ArrayObject', $query);
+        $this->assertEquals(['class' => 'crossover', 'type' => 'car', 'category' => 'vehicles'], $query->getArrayCopy());
+    }
+
     /**
      * @expectedException ValuQuery\QueryBuilder\Exception\InvalidQueryException
      */
@@ -120,7 +142,7 @@ class QueryBuilderTest extends TestCase
             return new \DomainException();
         });
         
-        $qb->build($this->parseSelector('a'), new \ArrayObject());
+        $qb->build($this->parseSelector('a'));
     }
     
     public function testListenerResponseExceptionIsNotThrownIfAnyResponseIsTruthful()
@@ -135,7 +157,7 @@ class QueryBuilderTest extends TestCase
             return true;
         });
     
-        $qb->build($this->parseSelector('a'), new \ArrayObject());
+        $qb->build($this->parseSelector('a'));
     }
 
     /**
@@ -144,7 +166,7 @@ class QueryBuilderTest extends TestCase
     public function testSelectorNotSupportedCausesException()
     {
         $qb = new QueryBuilder();
-        $qb->build($this->parseSelector('a'), new \ArrayObject());
+        $qb->build($this->parseSelector('a'));
     }
     
     protected function parseSelector($pattern)

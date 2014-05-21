@@ -95,6 +95,12 @@ abstract class Animal{
 	public $root;
 	
 	/**
+	 * @ODM\ReferenceOne(targetDocument="Animal", simple=true)
+	 * @var Animal
+	 */
+	public $parent;
+	
+	/**
 	 * @ODM\Date
 	 * @var \DateTime
 	 */
