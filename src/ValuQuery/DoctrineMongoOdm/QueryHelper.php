@@ -1,6 +1,7 @@
 <?php
 namespace ValuQuery\DoctrineMongoOdm;
 
+use ValuQuery\Selector\Selector;
 use ValuQuery\Selector\Parser\SelectorParser;
 use ValuQuery\QueryBuilder\QueryBuilder;
 use ValuQuery\DoctrineMongoOdm\Listener\QueryListener;
@@ -389,7 +390,20 @@ class QueryHelper
         $filterListener = $this->attachFilterListener();
         
         try {
-            if (is_string($query)) {
+            if ($query instanceof Selector) {
+                
+                $q = $this->getQueryBuilder()->build($query);
+                $this->applyFields($q, $fields);
+                
+                $result = $this->process($q, $fields, $mode);
+                
+                // Restore filters, applied by filter listener
+                if ($filterListener) {
+                    $filterListener->restoreFilters();
+                }
+                
+                return $result;
+            } else if (is_string($query)) {
                 $result = $this->doFindBySelector($query, $fields, $mode);
                 
                 // Restore filters, applied by filter listener
@@ -409,8 +423,7 @@ class QueryHelper
                     $this->applyFields($mainQuery, $fields);
                     
                     foreach ($query as $selector) {
-                        $subQuery = new ArrayObject();
-                        $this->applySelector($subQuery, $selector, true);
+                        $subQuery = $this->applySelector($selector, true);
                         
                         $mainQuery['query']['$or'][] = $subQuery['query'];
                         
@@ -449,12 +462,11 @@ class QueryHelper
     /**
      * Applies selector to query
      *
-     * @param ArrayObject $query
      * @param string $selector
      * @param boolean $useIdDetection
      * @return ArrayObject
      */
-    protected function applySelector(ArrayObject $query, $selector, $useIdDetection = false)
+    protected function applySelector($selector, $useIdDetection = false)
     {
         if ($useIdDetection) {
             $id = $this->detectId($selector);
@@ -465,7 +477,7 @@ class QueryHelper
         }
         
         $definition = SelectorParser::parseSelector($selector);
-        return $this->getQueryBuilder()->build($definition, $query);
+        return $this->getQueryBuilder()->build($definition);
     }
     
     /**
@@ -532,15 +544,13 @@ class QueryHelper
             return $this->doFindByArray(array('id' => $id), $fields, $mode);
         }
         
-        $query = new ArrayObject();
-        $query['query'] = [];
-        
-        $this->applyFields($query, $fields);
-        
         if($selector && ($selector !== self::UNIVERSAL_SELECTOR)){
-            $this->applySelector($query, $selector, false);
+            $query = $this->applySelector($selector, false);
+        } else {
+            $query = new ArrayObject(['query' => []]);
         }
         
+        $this->applyFields($query, $fields);
         return $this->process($query, $fields, $mode);    
     }
     
