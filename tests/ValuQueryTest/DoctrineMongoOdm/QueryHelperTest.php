@@ -1,6 +1,7 @@
 <?php
 namespace ValuQueryTest\DoctrineMongoOdm;
 
+use ValuQuery\Selector\Selector;
 use ValuQuery\DoctrineMongoOdm\QueryHelper;
 use ValuQueryTest\TestAsset\Organ;
 
@@ -277,6 +278,34 @@ class QueryHelperTest extends AbstractTestCase
         $result = $this->queryHelper->query('*', 'root');
         
         $this->assertEquals([$basicCat->id], $result);
+    }
+    
+    public function testQueryWithSequences()
+    {
+        $basicCat = $this->createTestEntity('Cat',['name' => 'Cat']);
+        $maxiCat = $this->createTestEntity('Cat',['parent' => $basicCat, 'name' => 'Maxicat']);
+        $superCat1 = $this->createTestEntity('Cat',['parent' => $maxiCat, 'name' => 'Supercat']);
+        $superCat2 = $this->createTestEntity('Cat',['name' => 'Supercat']);
+        
+        $helper = $this->queryHelper;
+        
+        $this->queryHelper->getQueryBuilder()->getEventManager()->attach('combineSequence', function($e) use($helper) {
+            $query      = $e->getQuery();
+            $sequence   = $e->getSequence();
+            $combinator = $sequence->getChildCombinator();
+            $queryBuilder = $e->getTarget();
+        
+            if ($combinator === Selector::COMBINATOR_CHILD) {
+                $id = $helper->queryOne($query['query'], 'id');
+                $query['query'] = ['parent' => $id];
+                return true;
+            }
+            
+            return false;
+        });
+        
+        $result = $this->queryHelper->query('[name="Cat"]>[name="Maxicat"]>[name="Supercat"]', 'id');
+        $this->assertEquals([$superCat1->id], $result);
     }
     
     public function testQueryWithEmptyQuery()
