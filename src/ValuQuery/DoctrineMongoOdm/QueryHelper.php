@@ -244,7 +244,7 @@ class QueryHelper
      * Enable ID autodetection
      * 
      * @param string $type ID type
-     * @return \Valu\Doctrine\MongoDB\Query\Helper
+     * @return QueryHelper
      */
     public function enableIdDetection($type = self::ID_MONGO)
     {
@@ -269,7 +269,7 @@ class QueryHelper
     /**
      * Disable ID autodetection
      * 
-     * @return \Valu\Doctrine\MongoDB\Query\Helper
+     * @return QueryHelper
      */
     public function disableIdDetection()
     {
@@ -372,7 +372,7 @@ class QueryHelper
      * @param mixed $query
      * @param array $fields
      * @param int $mode
-     * @return multitype:|\Valu\Doctrine\MongoDB\Query\mixed|Ambigous <string, multitype:, \Doctrine\ODM\MongoDB\Cursor, NULL, \Valu\Doctrine\MongoDB\Query\array|\Doctrine\ODM\MongoDB\Cursor, multitype:unknown >|NULL
+     * @return mixed
      */
     private function doQuery($query, $fields = null, $mode = self::FIND_MANY)
     {
