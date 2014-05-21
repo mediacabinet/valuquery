@@ -23,19 +23,20 @@ class QueryBuilder
      * Build a new query based on given selector
      * 
      * @param Selector $selector
-     * @param object $query
      * @return object $query
      */
-    public function build(Selector $selector, $query = null)
+    public function build(Selector $selector)
     {
-        $this->assertQueryIsValid($query, true);
-        
         $event = new QueryBuilderEvent('prepareQuery', $this);
-        $event->setQuery($query);
         $this->getEventManager()->trigger($event);
         
         $query = $event->getQuery();
-        $this->assertQueryIsValid($query, false);
+        
+        if ($query === null) {
+            $query = new \ArrayObject();
+        } else {
+            $this->assertQueryIsValid($query);
+        }
         
         $this->buildSelector($selector, $query);
         
@@ -90,26 +91,19 @@ class QueryBuilder
     protected function buildSequence(Sequence $sequence, $query)
     {
         $childSequence = $sequence->getChildSequence();
-        $combinator = $sequence->getChildCombinator();
-        $evm = $this->getEventManager();
         
-        if ($childSequence) {
-            $this->buildSequence($childSequence, $query);
-        }
-
         foreach ($sequence as $simpleSelector) {
             $this->buildSimpleSelector($simpleSelector, $query);
         }
-        
+         
         if ($childSequence) {
-            $args = new ArrayObject([
-                'sequence'          => $sequence,
-                'childSequence'     => $childSequence
-            ]);
-            
-            $event = new SelectorEvent('combineSequence', $this, $args);
+            $evm = $this->getEventManager();
+            $event = new SelectorEvent('combineSequence', $this);
+            $event->setSequence($sequence);
             $event->setQuery($query);
             $evm->trigger($event);
+            
+            $this->buildSequence($childSequence, $query);
         }
     }
     
@@ -149,15 +143,10 @@ class QueryBuilder
      * Assert that query is valid
      * 
      * @param mixed $query
-     * @param boolean $acceptNull
      * @throws InvalidQueryException
      */
-    private function assertQueryIsValid($query, $acceptNull)
+    private function assertQueryIsValid($query)
     {
-        if ($query === null && $acceptNull) {
-            return;
-        }
-        
         if (!is_object($query)) {
             throw new InvalidQueryException(
                 sprintf('%s is not valid query container; object expected', gettype($query))
