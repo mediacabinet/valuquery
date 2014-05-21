@@ -135,6 +135,11 @@ class QueryListener implements ListenerAggregateInterface
                 new ArrayObject()
             );
         }
+        
+        $query = $event->getQuery();
+        if (!isset($query['query'])) {
+            $query['query'] = [];
+        }
     }
 
     public function combineSequence(EventInterface $event)
