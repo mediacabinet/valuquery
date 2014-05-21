@@ -22,17 +22,24 @@ class Selector
         self::COMBINATOR_ANY_SIBLING => '~',
     );
     
+    public function __construct($sequence = null)
+    {
+        if ($sequence instanceof Sequence) {
+            $this->appendSequence($sequence);
+        }
+    }
+    
     /**
      * Append new sequence to selector
      *  
      * @param Sequence $sequence
-     * @param string $combinator Combinator
+     * @param string|null $combinator Combinator
      * @throws \InvalidArgumentException
      * @throws \Exception
      * 
      * @return Selector
      */
-    public function appendSequence(Sequence $sequence, $combinator)
+    public function appendSequence(Sequence $sequence, $combinator = null)
     {
         
         if (!in_array($combinator, array_keys(self::$combinatorChars)) 
