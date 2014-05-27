@@ -67,6 +67,12 @@ class QueryListener implements ListenerAggregateInterface
                 $this,
                 'combineSequence'
             ));
+        $this->listeners[] = $events->attach(
+            'applyUniversalSelector',
+            array(
+                $this,
+                'applyUniversalSelector'
+            ));
         
         $this->listeners[] = $events->attach(
             'applyElementSelector', 
@@ -144,6 +150,11 @@ class QueryListener implements ListenerAggregateInterface
 
     public function combineSequence(EventInterface $event)
     {}
+    
+    public function applyUniversalSelector()
+    {
+        return true;
+    }
 
     public function applyElementSelector(SimpleSelectorEvent $event)
     {}
