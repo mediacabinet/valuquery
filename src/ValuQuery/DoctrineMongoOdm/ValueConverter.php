@@ -100,8 +100,15 @@ class ValueConverter
                 if($index === (sizeof($fields)-1)) {
                     $this->convert($meta->name, $fieldName, $mappedField, $value, self::CONVERT_TO_DB);
                 } elseif($meta->hasAssociation($fieldName)) {
+                    
+                    try{
+                        $targetDocument = $meta->getAssociationTargetClass($fieldName);
+                    } catch(\Exception $e) {
+                        $targetDocument = $meta->fieldMappings['licenses']['targetDocument'];
+                    }
+                    
                     $meta = $this->getDocumentManager()
-                        ->getClassMetadata($meta->getAssociationTargetClass($fieldName));
+                        ->getClassMetadata($targetDocument);
                 
                     if (!$meta) {
                         break;
