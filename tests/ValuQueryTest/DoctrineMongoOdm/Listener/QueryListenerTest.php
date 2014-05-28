@@ -16,6 +16,7 @@ use ValuQueryTest\TestAsset\Category;
 use Zend\EventManager\EventManager;
 use ValuQuery\Selector\Parser\SelectorParser;
 use ValuQuery\QueryBuilder\QueryBuilder;
+use ValuQuery\Selector\SimpleSelector\Universal;
 
 class QueryListenerTest extends AbstractTestCase
 {
@@ -43,6 +44,7 @@ class QueryListenerTest extends AbstractTestCase
             [
                 'prepareQuery', 
                 'combineSequence', 
+                'applyUniversalSelector', 
                 'applyElementSelector', 
                 'applyIdSelector', 
                 'applyRoleSelector', 
@@ -75,6 +77,16 @@ class QueryListenerTest extends AbstractTestCase
         $this->queryListener->finalizeQuery($event);
         
         $this->assertArrayNotHasKey('__doctrine_mongodb_odm', $query->getArrayCopy());
+    }
+    
+    public function testApplyUniversalSelector()
+    {
+        $query = new ArrayObject(['query' => []]);
+        $selector = new Universal();
+        $event = new SimpleSelectorEvent($selector, $query);
+        $this->assertTrue($this->queryListener->applyUniversalSelector($event));
+        $query = $query->getArrayCopy();
+        $this->assertEquals([], $query['query']);
     }
     
     public function testApplyElementSelector()

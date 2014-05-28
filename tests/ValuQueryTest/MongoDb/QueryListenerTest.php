@@ -15,6 +15,7 @@ use ValuQuery\Selector\SimpleSelector\Path;
 use ValuQuery\Selector\SimpleSelector\Attribute;
 use ValuQuery\Selector\SimpleSelector\Pseudo;
 use ValuQuery\Selector\SimpleSelector\Pseudo\Sort;
+use ValuQuery\Selector\SimpleSelector\Universal;
 
 class QueryListenerTest extends TestCase
 {
@@ -35,6 +36,7 @@ class QueryListenerTest extends TestCase
             [
                 'prepareQuery', 
                 'combineSequence', 
+                'applyUniversalSelector', 
                 'applyElementSelector', 
                 'applyIdSelector', 
                 'applyRoleSelector', 
@@ -62,6 +64,13 @@ class QueryListenerTest extends TestCase
         $this->queryListener->prepareQuery($event);
         
         $this->assertInstanceOf('ArrayObject', $event->getQuery());
+    }
+    
+    public function testApplyUniversalSelector()
+    {
+        $selector = new Universal();
+        $event = new SimpleSelectorEvent($selector, new ArrayObject());
+        $this->assertTrue($this->queryListener->applyUniversalSelector($event));
     }
 
     public function testApplyElementSelector()
