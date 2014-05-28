@@ -648,6 +648,12 @@ class QueryHelper
                     !isset($query['limit']) ? 0 : $query['limit'],
                     !isset($query['skip']) ? 0 : $query['skip']);
         } else {
+            if (sizeof($query['select'])) {
+                foreach ($query['select'] as $field => $value) {
+                    $query['select'][$field] = (bool) $value;
+                }
+            }
+            
             $cursor = $coll->find($query['query'], $query['select']);
             
             if (!isset($query['select']) || empty($query['select'])) {
@@ -766,15 +772,15 @@ class QueryHelper
         }
         
         if (is_string($fields)) {
-            $query['select'][$fields] = 1;
+            $query['select'][$fields] = true;
         } else {
             foreach ($fields as $key => $value) {
                 if ($value == true && is_string($key)) {
-                    $query['select'][$key] = 1;
+                    $query['select'][$key] = true;
                 }
             }
         }
-        
+
         return true;
     }
     
