@@ -139,13 +139,19 @@ class QueryListener extends BaseListener
                 return $this->doApplyAttributeSelector($selector, $event->getQuery());
             }
             
-            $pattern = '^' . resolvePath . '$';
-          
-            $this->applyQueryCommand(
-                $query, 
-                $this->getPathField(), 
-                'regex', 
-                $pattern);
+            if (substr($path, 0, 1) === '^') {
+                $this->applyQueryCommand(
+                        $query,
+                        $this->getPathField(),
+                        'regex',
+                        $path);
+            } else {
+                $this->applyQueryCommand(
+                        $query,
+                        $this->getPathField(),
+                        null,
+                        $path);
+            }
         } else {
             $this->applyQueryCommand(
                 $query, 
@@ -228,6 +234,7 @@ class QueryListener extends BaseListener
     {
         if (!$this->pathResolver) {
             $this->pathResolver = new Resolver($this->getDocumentManager(), $this->getDefaultDocumentName());
+            $this->pathResolver->setValueConverter($this->getValueConverter());
             $this->pathResolver->setRoleField($this->getRoleField());
             $this->pathResolver->setPathField($this->getPathField());
         }
@@ -302,8 +309,27 @@ class QueryListener extends BaseListener
      */
     protected function resolvePath(Path $path)
     {
-        $resolver = $this->getPathResolver();
-        return $resolver->resolve($path);
+        $resolver     = $this->getPathResolver();
+        $resolvedPath = $resolver->resolve($path);
+        
+        if ($resolvedPath && strstr($resolvedPath, '*') !== false) {
+            
+            $resolvedPath = ltrim($resolvedPath, Path::PATH_SEPARATOR);
+            $items = explode(Path::PATH_SEPARATOR, $resolvedPath);
+            
+            // Convert string items to reg exp
+            foreach ($items as &$value) {
+                if (is_string($value)) {
+                    $value = preg_quote($value, Path::PATH_SEPARATOR);
+                    $value = str_replace('\*', '.*', $value);
+                }
+            }
+            
+            $pattern = Path::PATH_SEPARATOR . implode(Path::PATH_SEPARATOR, $items);
+            return '^' . $pattern . '$';
+        } else {
+            return $resolvedPath;
+        }
     }
     
     /**
