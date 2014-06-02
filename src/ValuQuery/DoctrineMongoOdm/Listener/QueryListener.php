@@ -130,7 +130,7 @@ class QueryListener extends BaseListener
             $path = $this->resolvePath($pathSelector);
             
             // Apply expression that causes this query to return null
-            if (! $path) {
+            if (!$path) {
                 $selector = new SimpleSelector\Attribute(
                     '_id', 
                     SimpleSelector\Attribute::OPERATOR_EQUALS, 
@@ -139,7 +139,7 @@ class QueryListener extends BaseListener
                 return $this->doApplyAttributeSelector($selector, $event->getQuery());
             }
             
-            if (substr($path, 0, 1) === '^') {
+            if (strpos($path, '^') === 0) {
                 $this->applyQueryCommand(
                         $query,
                         $this->getPathField(),
