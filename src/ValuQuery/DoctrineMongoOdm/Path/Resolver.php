@@ -64,7 +64,7 @@ class Resolver
         $documentName = $this->getDocumentName();
         
         if (! sizeof($items)) {
-            return false;
+            return Path::PATH_SEPARATOR;
         } elseif ($items[0] instanceof SimpleSelectorInterface) {
         
             $simpleSelector = array_shift($items);
@@ -145,7 +145,7 @@ class Resolver
      *
      * @return \ValuQuery\DoctrineMongoOdm\ValueConverter
      */
-    protected function getValueConverter()
+    public function getValueConverter()
     {
         if ($this->valueConverter === null) {
             $this->valueConverter = new ValueConverter($this->getDocumentManager());
