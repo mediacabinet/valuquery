@@ -105,9 +105,11 @@ class Resolver
             $items = array_merge(
                     explode(Path::PATH_SEPARATOR, $path),
                     array_values($items));
+            
         }
         
-        return Path::PATH_SEPARATOR . implode(Path::PATH_SEPARATOR, $items);
+        $resolved = Path::PATH_SEPARATOR . implode(Path::PATH_SEPARATOR, $items);
+        return $resolved;
     }
     
     /**

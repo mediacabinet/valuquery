@@ -139,7 +139,7 @@ class QueryListener extends BaseListener
                 return $this->doApplyAttributeSelector($selector, $event->getQuery());
             }
             
-            if (strpos($path, '^') === 0) {
+            if (substr($path, 0, 1) === "^") {
                 $this->applyQueryCommand(
                         $query,
                         $this->getPathField(),
