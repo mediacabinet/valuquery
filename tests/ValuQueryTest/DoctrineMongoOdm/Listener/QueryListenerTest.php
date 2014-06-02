@@ -116,7 +116,17 @@ class QueryListenerTest extends AbstractTestCase
         $event = new SimpleSelectorEvent($selector, $query);
         $this->assertTrue($this->queryListener->applyPathSelector($event));
         $query = $query->getArrayCopy();
-        $this->assertEquals(['path' => ['$regex' => '^/Chordata/Mammalia/Carnivora/Felidae/Felis/F\. catus$']], $query['query']);
+        $this->assertEquals(['path' => '/Chordata/Mammalia/Carnivora/Felidae/Felis/F. catus'], $query['query']);
+    }
+    
+    public function testApplyPathSelectorWithWildcard()
+    {
+        $query = new ArrayObject();
+        $selector = new Path(['Chordata', 'Mammalia', '*']);
+        $event = new SimpleSelectorEvent($selector, $query);
+        $this->assertTrue($this->queryListener->applyPathSelector($event));
+        $query = $query->getArrayCopy();
+        $this->assertEquals(['path' => ['$regex' => '^/Chordata/Mammalia/.*$']], $query['query']);
     }
     
     public function testApplyEmptyPathSelector()
@@ -145,7 +155,7 @@ class QueryListenerTest extends AbstractTestCase
         $event = new SimpleSelectorEvent($selector, $query);
         $this->assertTrue($queryListener->applyPathSelector($event));
         $query = $query->getArrayCopy();
-        $this->assertEquals(['path' => ['$regex' => '^/Dogs$']], $query['query']);
+        $this->assertEquals(['path' => '/Dogs'], $query['query']);
     }
     
     public function testApplyPathSelectorWithRoleSubSelector()
@@ -163,7 +173,7 @@ class QueryListenerTest extends AbstractTestCase
         $event = new SimpleSelectorEvent($selector, $query);
         $this->assertTrue($this->queryListener->applyPathSelector($event));
         $query = $query->getArrayCopy();
-        $this->assertEquals(['path' => ['$regex' => '^/Shephards$']], $query['query']);
+        $this->assertEquals(['path' => '/Shephards'], $query['query']);
     }
     
     /**
