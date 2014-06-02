@@ -14,7 +14,7 @@ class QueryableRepositoryTest extends AbstractTestCase
     /**
      * Prepares the environment before running a test.
      */
-    public function setUp()
+    protected function setUp()
     {
         parent::setUp();
         

@@ -22,7 +22,7 @@ class QueryListenerTest extends TestCase
 
     private $queryListener;
     
-    public function setUp()
+    protected function setUp()
     {
         $this->queryListener = new QueryListener();    
     }

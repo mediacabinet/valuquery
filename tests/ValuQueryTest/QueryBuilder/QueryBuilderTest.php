@@ -10,7 +10,7 @@ class QueryBuilderTest extends TestCase
 {
     private $queryBuilder;
     
-    public function setUp()
+    protected function setUp()
     {
         $this->queryBuilder = new QueryBuilder();
         

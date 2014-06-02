@@ -26,7 +26,7 @@ class QueryListenerTest extends AbstractTestCase
      */
     private $queryListener;
     
-    public function setUp()
+    protected function setUp()
     {
         parent::setUp();
         
@@ -177,7 +177,7 @@ class QueryListenerTest extends AbstractTestCase
     }
     
     /**
-     * @expectedException ValuQuery\DoctrineMongoOdm\Exception\IllegalPathSelectorException
+     * @expectedException ValuQuery\DoctrineMongoOdm\Path\Exception\IllegalPathSelectorException
      */
     public function testApplyPathSelectorWithIllegalSubSelector()
     {

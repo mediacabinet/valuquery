@@ -17,7 +17,7 @@ abstract class AbstractTestCase extends TestCase
      */
     protected $dm;
     
-    public function setUp()
+    protected function setUp()
     {
         $evm = new Evm();
     

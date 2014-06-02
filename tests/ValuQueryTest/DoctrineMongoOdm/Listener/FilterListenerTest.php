@@ -11,7 +11,7 @@ class FilterListenerTest extends AbstractTestCase
     
     private $filterListener;
     
-    public function setUp()
+    protected function setUp()
     {
         parent::setUp();
         
