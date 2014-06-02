@@ -3,15 +3,16 @@ namespace ValuQuery\DoctrineMongoOdm\Listener;
 
 use ValuQuery\DoctrineMongoOdm\Exception;
 use ValuQuery\DoctrineMongoOdm\ValueConverter;
+use ValuQuery\DoctrineMongoOdm\Path\ResolverInterface;
 use ValuQuery\QueryBuilder\Event\SimpleSelectorEvent;
 use ValuQuery\QueryBuilder\Event\QueryBuilderEvent;
 use ValuQuery\MongoDb\QueryListener as BaseListener;
 use ValuQuery\Selector\SimpleSelector;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Zend\EventManager\EventManagerInterface;
-use ValuQuery\Selector\SimpleSelector\Id;
-use ValuQuery\Selector\SimpleSelector\Role;
+use ValuQuery\Selector\SimpleSelector\Path;
 use ArrayAccess;
+use ValuQuery\DoctrineMongoOdm\Path\Resolver;
 
 class QueryListener extends BaseListener
 {
@@ -42,6 +43,13 @@ class QueryListener extends BaseListener
      * @var ValueConverter
      */
     protected $valueConverter;
+    
+    /**
+     * ResolverInterface
+     * 
+     * @var ResolverInterface
+     */
+    protected $pathResolver;
     
     public function __construct(DocumentManager $dm, $documentName = null)
     {
@@ -119,7 +127,7 @@ class QueryListener extends BaseListener
                     'documentName',
                     $this->getDefaultDocumentName());
             
-            $path = $this->translatePathArray($documentName, $pathSelector->getPathItems());
+            $path = $this->resolvePath($pathSelector);
             
             // Apply expression that causes this query to return null
             if (! $path) {
@@ -131,9 +139,7 @@ class QueryListener extends BaseListener
                 return $this->doApplyAttributeSelector($selector, $event->getQuery());
             }
             
-            $pattern = '^' . SimpleSelector\Path::PATH_SEPARATOR .
-                         implode(SimpleSelector\Path::PATH_SEPARATOR, $path) . 
-                         '$';
+            $pattern = '^' . resolvePath . '$';
           
             $this->applyQueryCommand(
                 $query, 
@@ -183,14 +189,50 @@ class QueryListener extends BaseListener
         $this->discriminatorMap = $discriminatorMap;
     }
 
+    /**
+     * Retrieve default document name
+     * 
+     * @return string
+     */
     public function getDefaultDocumentName()
     {
         return $this->defaultDocumentName;
     }
 
+    /**
+     * Set default document name
+     * 
+     * @param string $defaultDocumentName
+     */
     public function setDefaultDocumentName($defaultDocumentName)
     {
         $this->defaultDocumentName = $defaultDocumentName;
+    }
+    
+    /**
+     * Set path resolver
+     * 
+     * @param ResolverInterface $pathResolver
+     */
+    public function setPathResolver(ResolverInterface $pathResolver)
+    {
+        $this->pathResolver = $pathResolver;
+    }
+    
+    /**
+     * Retrieve path resolver
+     * 
+     * @return ResolverInterface
+     */
+    public function getPathResolver()
+    {
+        if (!$this->pathResolver) {
+            $this->pathResolver = new Resolver($this->getDocumentManager(), $this->getDefaultDocumentName());
+            $this->pathResolver->setRoleField($this->getRoleField());
+            $this->pathResolver->setPathField($this->getPathField());
+        }
+        
+        return $this->pathResolver;
     }
     
     /**
@@ -254,67 +296,14 @@ class QueryListener extends BaseListener
     /**
      * Template method for path translation
      *
-     * @param string $documentName
-     * @param array $items
-     *            Path items
-     * @return array
+     * @param Path $path
+     * @return string
      * @throws \Exception
      */
-    protected function translatePathArray($documentName, array $items)
+    protected function resolvePath(Path $path)
     {
-        if (! sizeof($items)) {
-            return array();
-        } elseif ($items[0] instanceof SimpleSelector\SimpleSelectorInterface) {
-            
-            $simpleSelector = array_shift($items);
-            $pathField = $this->getPathField();
-            
-            // Create a new Query Builder instance
-            $qb = $this->getDocumentManager()->createQueryBuilder($documentName);
-            
-            // Select path attribute
-            $qb->select($pathField)->hydrate(false);
-
-            if ($simpleSelector instanceof Id) {
-                $field = '_id';
-                $value = $simpleSelector->getCondition();
-                $this->filterFieldForDocument($documentName, $field, $value);
-                
-                $qb->field($field)->equals($value);
-            } else if ($simpleSelector instanceof Role) {
-                $qb->field($this->getRoleField())->in([
-                    $simpleSelector->getCondition()]);
-            } else {
-                throw new Exception\IllegalPathSelectorException(
-                    sprintf('Simple selectors of type "%s" are not supported as part of path selector', 
-                            $simpleSelector->getName()));
-            }
-            
-            // Fetch data
-            $result = $qb->limit(1)
-                ->getQuery()
-                ->getSingleResult();
-            
-            // Exit early if selector could not be resolved
-            if (! $result || ! isset($result[$pathField]) || ! $result[$pathField]) {
-                return false;
-            }
-            
-            $path = ltrim($result[$pathField], '/');
-            $items = array_merge(
-                    explode(SimpleSelector\Path::PATH_SEPARATOR, $path), 
-                    array_values($items));
-        }
-        
-        // Convert string items to reg exp
-        foreach ($items as &$value) {
-            if (is_string($value)) {
-                $value = preg_quote($value, '/');
-                $value = str_replace('\*', '.*', $value);
-            }
-        }
-        
-        return $items;
+        $resolver = $this->getPathResolver();
+        return $resolver->resolve($path);
     }
     
     /**

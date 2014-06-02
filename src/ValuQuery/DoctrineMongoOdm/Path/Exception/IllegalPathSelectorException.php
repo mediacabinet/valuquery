@@ -1,5 +1,5 @@
 <?php
-namespace ValuQuery\DoctrineMongoOdm\Exception;
+namespace ValuQuery\DoctrineMongoOdm\Path\Exception;
 
 use Exception;
 
