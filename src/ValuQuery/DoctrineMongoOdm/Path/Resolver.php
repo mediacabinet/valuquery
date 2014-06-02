@@ -79,7 +79,7 @@ class Resolver
             if ($simpleSelector instanceof Id) {
                 $field = '_id';
                 $value = $simpleSelector->getCondition();
-                $this->filterFieldForDocument($documentName, $field, $value);
+                $this->getValueConverter()->convertToDatabase($documentName, $field, $value);
         
                 $qb->field($field)->equals($value);
             } else if ($simpleSelector instanceof Role) {
@@ -105,14 +105,6 @@ class Resolver
             $items = array_merge(
                     explode(Path::PATH_SEPARATOR, $path),
                     array_values($items));
-        }
-        
-        // Convert string items to reg exp
-        foreach ($items as &$value) {
-            if (is_string($value)) {
-                $value = preg_quote($value, '/');
-                $value = str_replace('\*', '.*', $value);
-            }
         }
         
         return Path::PATH_SEPARATOR . implode(Path::PATH_SEPARATOR, $items);
