@@ -1,5 +1,5 @@
 {
-	"name" : "valu/valuquery",
+	"name" : "valu/valu-query",
 	"description" : "Valu query library",
 	"version" : "1.0.0",
 	"type" : "library",
@@ -22,9 +22,13 @@
 	},
 	"autoload" : {
 		"psr-0" : {
-			"ValuQueryTest\\" : "tests/",
 			"ValuQuery\\" : "src/"
 		}
 	},
+	"autoload-dev" : {
+        "psr-0" : {
+            "ValuQueryTest\\" : "tests/"
+        }
+    },
 	"minimum-stability" : "alpha"
 }
