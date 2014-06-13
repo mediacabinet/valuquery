@@ -67,7 +67,13 @@ class ValueConverter
             $mappedField = $this->mapField($meta, $fieldName, self::CONVERT_TO_PHP);
             
             if($meta->hasAssociation($mappedField) && is_array($value)) {
-                $this->convertArrayToPhp($meta->getAssociationTargetClass($mappedField), $value);
+            	try{
+            		$targetDocument = $meta->getAssociationTargetClass($fieldName);
+            	} catch(\Exception $e) {
+            		$targetDocument = $meta->fieldMappings[$fieldName]['targetDocument'];
+            	}
+            	
+                $this->convertArrayToPhp($targetDocument, $value);
             } else {
                 $this->convert($documentName, $mappedField, $fieldName, $value, self::CONVERT_TO_PHP);
             }
@@ -104,7 +110,7 @@ class ValueConverter
                     try{
                         $targetDocument = $meta->getAssociationTargetClass($fieldName);
                     } catch(\Exception $e) {
-                        $targetDocument = $meta->fieldMappings['licenses']['targetDocument'];
+                        $targetDocument = $meta->fieldMappings[$fieldName]['targetDocument'];
                     }
                     
                     $meta = $this->getDocumentManager()
