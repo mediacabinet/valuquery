@@ -390,6 +390,10 @@ class QueryHelper
         $filterListener = $this->attachFilterListener();
         
         try {
+            if ($query instanceof \MongoId) {
+                $query = (string) $query;
+            }
+            
             if ($query instanceof Selector) {
                 
                 $q = $this->getQueryBuilder()->build($query);
@@ -444,8 +448,14 @@ class QueryHelper
                     return $result;
                 }
             } else {
+                $type = gettype($query);
+                
+                if ($type === 'object') {
+                    $type = 'object of type '.get_class($query);    
+                }
+                
                 throw new InvalidQueryException(
-                    sprintf('Unrecognized query format; string or array expected, %s received', gettype($query))
+                    sprintf('Unrecognized query format; string or array expected, %s received', $type)
                 );
             }
         } catch (\Exception $e) {
