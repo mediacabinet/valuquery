@@ -260,6 +260,18 @@ class QueryListenerTest extends TestCase
         $this->assertEquals(['query' => ['name' => ['$regex' => 'john.*smith']]], $this->applyAttributeSelector($selector));
     }
     
+    public function testApplyAttributeSelectorRegExpUsingInlineCaseInsensitiveModifier()
+    {
+        $selector = new Attribute('name', Attribute::OPERATOR_REG_EXP, '(?i)john.*smith');
+        $this->assertEquals(['query' => ['name' => ['$regex' => 'john.*smith', '$options' => 'i']]], $this->applyAttributeSelector($selector));
+    }
+    
+    public function testApplyAttributeSelectorRegExpUsingAllInlineModifiers()
+    {
+        $selector = new Attribute('name', Attribute::OPERATOR_REG_EXP, '(?imxs)john.*smith');
+        $this->assertEquals(['query' => ['name' => ['$regex' => 'john.*smith', '$options' => 'imxs']]], $this->applyAttributeSelector($selector));
+    }
+    
     public function testApplyAttributeSelectorSubstrMatch()
     {
         $selector = new Attribute('ip', Attribute::OPERATOR_SUBSTR_MATCH, '.221.');

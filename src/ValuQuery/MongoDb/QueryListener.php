@@ -338,7 +338,7 @@ class QueryListener implements ListenerAggregateInterface
                 $this->applyQueryCommand($query, $attr, 'in', $list);
                 break;
             case SimpleSelector\Attribute::OPERATOR_REG_EXP:
-                $this->applyQueryCommand($query, $attr, 'regex', $cond);
+                $this->applyRegEx($query, $attr, $cond);
                 break;
             case SimpleSelector\Attribute::OPERATOR_SUBSTR_MATCH:
                 $this->applyQueryCommand($query, $attr, 'regex', '.*' . preg_quote($cond, '/') . '.*');
@@ -356,6 +356,24 @@ class QueryListener implements ListenerAggregateInterface
         }
         
         return true;
+    }
+    
+    /**
+     * Apply regex command
+     * 
+     * @param ArrayAccess $query
+     * @param string $field
+     * @param string $pattern
+     */
+    protected function applyRegEx(ArrayAccess $query, $field, $pattern)
+    {
+        // Parse inline regex modifiers (i, m, x or s)
+        if (preg_match('/^\(\?([imxs]+)\)(.*)/', $pattern, $matches)) {
+            $this->applyQueryCommand($query, $field, 'regex', $matches[2]);
+            $this->applyQueryCommand($query, $field, 'options', $matches[1]);
+        } else {
+            $this->applyQueryCommand($query, $field, 'regex', $pattern);
+        }
     }
     
     /**
