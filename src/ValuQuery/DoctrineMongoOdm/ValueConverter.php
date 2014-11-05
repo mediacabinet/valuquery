@@ -113,6 +113,10 @@ class ValueConverter
                         $targetDocument = $meta->fieldMappings[$fieldName]['targetDocument'];
                     }
                     
+                    if (!$targetDocument) {
+                        break;
+                    }
+                    
                     $meta = $this->getDocumentManager()
                         ->getClassMetadata($targetDocument);
                 
