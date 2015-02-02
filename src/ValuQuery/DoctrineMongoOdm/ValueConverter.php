@@ -152,11 +152,11 @@ class ValueConverter
         // Map _id automatically to correct identifier field name
         // (_id is mostly for internal usage)
         if ($phpField === '_id') {
-            $phpField = $meta->getIdentifier();
+            $phpField = $this->getIdentifierField($meta);
         }
         
         // Do nothing if identifier and value is a boolean false
-        if ($phpField === $meta->getIdentifier() && $value === false) {
+        if ($meta->isIdentifier($phpField) && $value === false) {
             return;
         }
         
@@ -173,7 +173,7 @@ class ValueConverter
             $targetMeta = $this->getDocumentManager()
                 ->getClassMetadata($fieldMapping['targetDocument']);
 
-            $type = $this->resolveFieldType($targetMeta, $targetMeta->getIdentifier());
+            $type = $this->resolveFieldType($targetMeta, $this->getIdentifierField($targetMeta));
 
             // If we're using DBRefs, add .$db to field name
             if ($mode === self::CONVERT_TO_DB
@@ -262,7 +262,7 @@ class ValueConverter
      */
     private function mapField(ClassMetadataInfo $meta, $fieldName, $mode)
     {
-        if ($fieldName !== $meta->getIdentifier()) {
+        if (!$meta->isIdentifier($fieldName)) {
             if ($mode === self::CONVERT_TO_DB) {
                 if (isset($meta->fieldMappings[$fieldName])) {
                     return $meta->fieldMappings[$fieldName]['name'];
@@ -277,5 +277,17 @@ class ValueConverter
         }
         
         return $fieldName;
+    }
+    
+    /**
+     * Retrieve identifier field name
+     * 
+     * @param ClassMetadataInfo $meta
+     * @return mixed
+     */
+    private function getIdentifierField(ClassMetadataInfo $meta)
+    {
+        $identifier = $meta->getIdentifier();
+        return array_pop($identifier);   
     }
 }
