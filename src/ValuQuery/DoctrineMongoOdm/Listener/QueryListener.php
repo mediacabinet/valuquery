@@ -107,7 +107,7 @@ class QueryListener extends BaseListener
             $documentName
         );
         
-        $discrField = $class->discriminatorField['name'];
+        $discrField = $class->discriminatorField;
         $discrValue = $class->discriminatorValue;
         
         $this->applyQueryCommand($query, $discrField, null, $discrValue);
