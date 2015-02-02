@@ -74,6 +74,13 @@ class SelectorParserTest extends \PHPUnit_Framework_TestCase{
         $this->assertSelector('[abc]');
     }
     
+    public function testAttributeSelectorWithChildProperty(){
+        $name = AbstractSelector::SELECTOR_ATTRIBUTE;
+    
+        $this->assertSelectorName('[a.b=1]', $name);
+        $this->assertSelector('[a.b=1]');
+    }
+    
     public function testPrefixAttributeSelector()
     {
         $name = AbstractSelector::SELECTOR_ATTRIBUTE;

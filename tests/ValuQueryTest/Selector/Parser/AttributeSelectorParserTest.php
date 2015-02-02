@@ -22,9 +22,19 @@ class AttributeSelectorParserTest
         $this->assertAttribute($selector, $selector);
     }
     
+    public function testChildAttribute(){
+        $selector = 'a.b';
+        $this->assertAttribute($selector, $selector);
+    }
+    
     public function testEqualsOperator(){
         $selector = 'abc="def"';
         $this->assertPattern($selector);
+    }
+    
+    public function testChildAttributeEquals(){
+        $selector = 'a.b=1';
+        $this->assertPattern($selector, $selector);
     }
     
     public function testInListOperator(){
