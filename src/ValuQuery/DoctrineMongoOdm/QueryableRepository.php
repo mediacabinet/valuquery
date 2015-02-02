@@ -124,13 +124,12 @@ class QueryableRepository extends BaseRepository
         if ($this->queryHelper === null) {
             $this->queryHelper = new QueryHelper($this->getDocumentManager(), $this->getClassName());
             
-            $meta = $this->getClassMetadata();
-            $idMeta = $meta->getFieldMapping($meta->getIdentifier());
+            $idStrategy = $this->getIdentifierStrategy();
             
-            if ($idMeta) {
-                if (isset($idMeta['strategy']) && strtoupper($idMeta['strategy']) === 'UUID') {
+            if ($idStrategy) {
+                if ($idStrategy === 'uuid') {
                     $this->queryHelper->enableIdDetection(QueryHelper::ID_UUID5);   
-                } elseif (!isset($idMeta['strategy']) || strtoupper($idMeta['strategy']) === 'AUTO') {
+                } elseif ($idStrategy === 'auto') {
                     $this->queryHelper->enableIdDetection(QueryHelper::ID_MONGO);
                 }
             }
@@ -155,5 +154,24 @@ class QueryableRepository extends BaseRepository
         }
         
         return $this->queryHelper;
+    }
+    
+    /**
+     * Retrieve identifier strategy
+     * 
+     * @return string Strategy as undercase string (e.g. "auto" or "uuid")
+     */
+    private function getIdentifierStrategy()
+    {
+        $meta       = $this->getClassMetadata();
+        $identifier = $meta->getIdentifier();
+        $field      = array_pop($identifier);
+        
+        if ($field) {
+            $mapping = $meta->getFieldMapping($field);
+            return isset($mapping['strategy']) ? strtolower($mapping['strategy']) : null; 
+        } else {
+            return null;
+        }
     }
 }
