@@ -932,31 +932,10 @@ class QueryHelper
         }
         
         $dm = $this->getDocumentManager();
-        $coll = $collection = $dm->getDocumentCollection($this->documentName);
-        
-        if ($cursor instanceof BaseLoggableCursor) {
-            return new LoggableCursor(
-                $dm->getConnection(),
-                $coll,
-                $dm->getUnitOfWork(),
-                $this->documentManager->getClassMetadata($this->documentName),
-                $cursor,
-                $cursor->getQuery(),
-                $cursor->getFields(),
-                $dm->getConfiguration()->getRetryQuery(),
-                $cursor->getLoggerCallable()
-            );
-        } else {
-            return new Cursor(
-                $dm->getConnection(),
-                $coll,
-                $dm->getUnitOfWork(),
-                $this->documentManager->getClassMetadata($this->documentName),
-                $cursor,
-                $cursor->getQuery(),
-                $cursor->getFields(),
-                $dm->getConfiguration()->getRetryQuery()
-            );
-        }
+        return new Cursor(
+            $cursor,
+            $dm->getUnitOfWork(),
+            $dm->getClassMetadata($this->documentName)
+        );
     }
 }
