@@ -1,34 +1,33 @@
 {
-	"name" : "valu/valuquery",
-	"description" : "Valu query library",
-	"type" : "library",
-	"keywords" : [
-		"valu",
-		"query",
-		"zend framework 2"
-	],
-	"homepage" : "http://www.mediacabinet.fi/",
-	"license" : [
-		"BSD-3-Clause"
-	],
-	"require" : {
-		"php" : ">=5.4.0",
-		"zendframework/zendframework" : ">=2.0",
-		"doctrine/mongodb-odm" : "dev-master",
-		"doctrine/doctrine-mongo-odm-module" : "dev-master"
-	},
-	"require-dev" : {
-		"doctrine/doctrine-module" : "0.8 as 0.9"
-	},
-	"autoload" : {
-		"psr-0" : {
-			"ValuQuery\\" : "src/"
-		}
-	},
-	"autoload-dev" : {
+    "name" : "valu/valuquery",
+    "description" : "Valu query library",
+    "type" : "library",
+    "keywords" : [
+        "valu",
+        "query",
+        "zend framework 2"
+    ],
+    "homepage" : "http://www.mediacabinet.fi/",
+    "license" : [
+        "BSD-3-Clause"
+    ],
+    "require" : {
+        "php" : ">=5.4.0",
+        "zendframework/zendframework" : "2.*"
+    },
+    "require-dev" : {
+        "doctrine/mongodb-odm" : "dev-master",
+        "doctrine/doctrine-mongo-odm-module" : "dev-master",
+        "doctrine/doctrine-module" : "0.8 as 0.9"
+    },
+    "autoload" : {
+        "psr-0" : {
+            "ValuQuery\\" : "src/"
+        }
+    },
+    "autoload-dev" : {
         "psr-0" : {
             "ValuQueryTest\\" : "tests/"
         }
-    },
-	"minimum-stability" : "alpha"
+    }
 }
