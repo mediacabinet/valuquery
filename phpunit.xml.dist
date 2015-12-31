@@ -10,6 +10,12 @@
          syntaxCheck="false"
          bootstrap="tests/bootstrap.php"
 >
+
+    <php>
+        <env name="MONGO_SERVER" value="localhost"/>
+        <env name="MONGO_PORT" value="27017"/>
+    </php>
+    
     <testsuites>
         <testsuite name="ValuQuery Test Suite">
             <directory>./tests/ValuQueryTest/</directory>

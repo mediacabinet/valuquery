@@ -37,7 +37,9 @@ abstract class AbstractTestCase extends TestCase
         $configuration->setMetadataCacheImpl(new ArrayCache());
         $configuration->setMetadataDriverImpl($driver);
     
-        $connection = new Connection('mongodb://localhost:27017', [], $configuration, $evm);
+        $server = getenv('MONGO_SERVER');
+        $port = getenv('MONGO_PORT');
+        $connection = new Connection('mongodb://'.$server.':'.$port, [], $configuration, $evm);
     
         $this->dm = DocumentManager::create($connection, $configuration, $evm);
         
