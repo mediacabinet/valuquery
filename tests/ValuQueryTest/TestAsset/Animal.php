@@ -11,7 +11,7 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
  * @ODM\DiscriminatorMap({"dog"="ValuQueryTest\TestAsset\Dog", "cat"="ValuQueryTest\TestAsset\Cat", "fish"="ValuQueryTest\TestAsset\Fish"})
  */
 abstract class Animal{
- 
+
 	/**
 	 * @ODM\Id(strategy="UUID")
 	 * @var string
@@ -23,31 +23,31 @@ abstract class Animal{
 	 * @var string
 	 */
 	public $name;
-	
+
 	/**
 	 * @ODM\Int
 	 * @var int
 	 */
 	public $maxAge;
-	
+
 	/**
 	 * @ODM\Float
 	 * @var float
 	 */
 	public $maxWidth;
-	
+
 	/**
 	 * @ODM\Boolean
 	 * @var boolean
 	 */
 	public $canFly;
-	
+
 	/**
 	 * @ODM\String
 	 * @var string
 	 */
 	public $path;
-	
+
 	/**
 	 * @ODM\Boolean(name="breedUw")
 	 * @var string
@@ -56,12 +56,12 @@ abstract class Animal{
 
 	/**
 	 * Classes
-	 * 
+	 *
 	 * @ODM\Collection
 	 * @param array
 	 */
 	public $classes = array();
-	
+
 	/**
 	 * Classes
 	 *
@@ -69,37 +69,43 @@ abstract class Animal{
 	 * @param array
 	 */
 	public $roles = array();
-	
+
 	/**
 	 * @ODM\EmbedOne(targetDocument="Organ")
 	 * @var Organ
 	 */
 	public $head;
-	
+
 	/**
 	 * @ODM\EmbedMany(targetDocument="Organ")
 	 * @var ArrayCollection
 	 */
 	public $limbs;
-	
+
 	/**
 	 * @ODM\ReferenceMany(targetDocument="Animal")
 	 * @var ArrayCollection
 	 */
 	public $related;
-	
+
 	/**
-	 * @ODM\ReferenceOne(targetDocument="Animal", simple=true)
+	 * @ODM\ReferenceOne(targetDocument="Animal")
 	 * @var Animal
 	 */
 	public $root;
-	
+
 	/**
-	 * @ODM\ReferenceOne(targetDocument="Animal", simple=true)
+	 * @ODM\ReferenceOne(targetDocument="Animal")
 	 * @var Animal
 	 */
 	public $parent;
-	
+
+    /**
+	 * @ODM\ReferenceOne(targetDocument="Sound", simple=true)
+	 * @var Sound
+	 */
+	public $sound;
+
 	/**
 	 * @ODM\Date
 	 * @var \DateTime

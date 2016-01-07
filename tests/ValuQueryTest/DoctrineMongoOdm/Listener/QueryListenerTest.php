@@ -25,60 +25,60 @@ class QueryListenerTest extends AbstractTestCase
      * @var QueryListener
      */
     private $queryListener;
-    
+
     protected function setUp()
     {
         parent::setUp();
-        
+
         $this->queryListener = new QueryListener(
             $this->dm, 'ValuQueryTest\TestAsset\Animal');
     }
-    
+
     public function testAttach()
     {
         $evm = new EventManager();
         $evm->attach($this->queryListener);
-        
+
         $events = $evm->getEvents();
         $this->assertEquals(
             [
-                'prepareQuery', 
-                'combineSequence', 
-                'applyUniversalSelector', 
-                'applyElementSelector', 
-                'applyIdSelector', 
-                'applyRoleSelector', 
-                'applyClassSelector', 
-                'applyPathSelector', 
-                'applyAttributeSelector', 
+                'prepareQuery',
+                'combineSequence',
+                'applyUniversalSelector',
+                'applyElementSelector',
+                'applyIdSelector',
+                'applyRoleSelector',
+                'applyClassSelector',
+                'applyPathSelector',
+                'applyAttributeSelector',
                 'applyPseudoSelector',
-                'finalizeQuery', 
+                'finalizeQuery',
             ],
             $events
         );
     }
-    
+
     public function testDetach()
     {
         $evm = new EventManager();
         $evm->attach($this->queryListener);
         $evm->detach($this->queryListener);
-        
+
         $this->assertEquals([], $evm->getEvents());
     }
-    
+
     public function testFinalizeQuery()
     {
         $query = new ArrayObject();
         $query['__doctrine_mongodb_odm'] = true;
-        
+
         $event = new QueryBuilderEvent();
         $event->setQuery($query);
         $this->queryListener->finalizeQuery($event);
-        
+
         $this->assertArrayNotHasKey('__doctrine_mongodb_odm', $query->getArrayCopy());
     }
-    
+
     public function testApplyUniversalSelector()
     {
         $query = new ArrayObject(['query' => []]);
@@ -88,7 +88,7 @@ class QueryListenerTest extends AbstractTestCase
         $query = $query->getArrayCopy();
         $this->assertEquals([], $query['query']);
     }
-    
+
     public function testApplyElementSelector()
     {
         $query = new ArrayObject();
@@ -105,10 +105,10 @@ class QueryListenerTest extends AbstractTestCase
         $selector = new Element('mouse');
         $event = new SimpleSelectorEvent($selector, $query);
         $this->assertInstanceOf(
-            'ValuQuery\DoctrineMongoOdm\Exception\UnknownElementException', 
+            'ValuQuery\DoctrineMongoOdm\Exception\UnknownElementException',
             $this->queryListener->applyElementSelector($event));
     }
-    
+
     public function testApplyPathSelector()
     {
         $query = new ArrayObject();
@@ -118,7 +118,7 @@ class QueryListenerTest extends AbstractTestCase
         $query = $query->getArrayCopy();
         $this->assertEquals(['path' => '/Chordata/Mammalia/Carnivora/Felidae/Felis/F. catus'], $query['query']);
     }
-    
+
     public function testApplyPathSelectorWithWildcard()
     {
         $query = new ArrayObject();
@@ -128,7 +128,7 @@ class QueryListenerTest extends AbstractTestCase
         $query = $query->getArrayCopy();
         $this->assertEquals(['path' => ['$regex' => '^/Chordata/Mammalia/.*$']], $query['query']);
     }
-    
+
     public function testApplyEmptyPathSelector()
     {
         $query = new ArrayObject();
@@ -138,18 +138,18 @@ class QueryListenerTest extends AbstractTestCase
         $query = $query->getArrayCopy();
         $this->assertEquals(['path' => '/'], $query['query']);
     }
-    
+
     public function testApplyPathSelectorWithIdSubSelector()
     {
         $queryListener = new QueryListener($this->queryListener->getDocumentManager(), 'ValuQueryTest\TestAsset\Category');
-        
+
         $category = new Category();
         $category->path = '/Dogs';
-        
+
         $dm = $this->queryListener->getDocumentManager();
         $dm->persist($category);
         $dm->flush();
-        
+
         $query = new ArrayObject();
         $selector = new Path([new Id($category->id)]);
         $event = new SimpleSelectorEvent($selector, $query);
@@ -157,17 +157,17 @@ class QueryListenerTest extends AbstractTestCase
         $query = $query->getArrayCopy();
         $this->assertEquals(['path' => '/Dogs'], $query['query']);
     }
-    
+
     public function testApplyPathSelectorWithRoleSubSelector()
     {
         $dog = new Dog();
         $dog->path = '/Shephards';
         $dog->roles = ['shephards'];
-        
+
         $dm = $this->queryListener->getDocumentManager();
         $dm->persist($dog);
         $dm->flush();
-        
+
         $query = new ArrayObject();
         $selector = new Path([new Role('shephards')]);
         $event = new SimpleSelectorEvent($selector, $query);
@@ -175,7 +175,7 @@ class QueryListenerTest extends AbstractTestCase
         $query = $query->getArrayCopy();
         $this->assertEquals(['path' => '/Shephards'], $query['query']);
     }
-    
+
     /**
      * @expectedException ValuQuery\DoctrineMongoOdm\Path\Exception\IllegalPathSelectorException
      */
@@ -186,7 +186,7 @@ class QueryListenerTest extends AbstractTestCase
         $event = new SimpleSelectorEvent($selector, $query);
         $this->queryListener->applyPathSelector($event);
     }
-    
+
     public function testApplyPathSelectorWithNonMatchingSubSelector()
     {
         $query = new ArrayObject();
@@ -196,17 +196,17 @@ class QueryListenerTest extends AbstractTestCase
         $query = $query->getArrayCopy();
         $this->assertEquals(['_id' => false], $query['query']);
     }
-    
+
     public function testQueryBySimpleReference()
     {
         $query = new ArrayObject();
-        $selector = new Attribute('root', Attribute::OPERATOR_EQUALS, 'abc');
+        $selector = new Attribute('sound', Attribute::OPERATOR_EQUALS, 'abc');
         $event = new SimpleSelectorEvent($selector, $query);
         $this->assertTrue($this->queryListener->applyAttributeSelector($event));
         $query = $query->getArrayCopy();
-        $this->assertEquals(['root' => 'abc'], $query['query']);
+        $this->assertEquals(['sound' => 'abc'], $query['query']);
     }
-    
+
     public function testQueryByDBRefReference()
     {
         $query = new ArrayObject();
@@ -214,19 +214,19 @@ class QueryListenerTest extends AbstractTestCase
         $event = new SimpleSelectorEvent($selector, $query);
         $this->assertTrue($this->queryListener->applyAttributeSelector($event));
         $query = $query->getArrayCopy();
-        
+
         $this->assertArrayHasKey('limbs.$id', $query['query']);
         $this->assertArrayHasKey('$in', $query['query']['limbs.$id']);
         $this->assertInternalType('array', $query['query']['limbs.$id']['$in']);
         $this->assertInstanceOf('MongoId', $query['query']['limbs.$id']['$in'][0]);
     }
-    
+
     public function testQueryByDBRefReferenceFromConcreteSubclass()
     {
         $this->queryListener->setDefaultDocumentName('ValuQueryTest\TestAsset\Cat');
         $this->testQueryByDBRefReference();
     }
-    
+
     public function testAttributeQueryToConcreteClassUsingInheritedField()
     {
         $this->queryListener->setDefaultDocumentName('ValuQueryTest\TestAsset\Cat');
@@ -236,7 +236,7 @@ class QueryListenerTest extends AbstractTestCase
             'name', Attribute::OPERATOR_EQUALS, 'Siamese'
         );
     }
-    
+
     public function testAttributeQueryByDateField()
     {
         $this->assertAttributeQueryEquals(
@@ -244,20 +244,20 @@ class QueryListenerTest extends AbstractTestCase
             'createdAt', Attribute::OPERATOR_EQUALS, "2010-01-15 00:00:00"
         );
     }
-    
+
     public function testAttributeQueryByBooleanField()
     {
         $this->assertAttributeQueryEquals(
             ['canFly' => false],
             'canFly', Attribute::OPERATOR_EQUALS, false
         );
-        
+
         $this->assertAttributeQueryEquals(
             ['canFly' => true],
             'canFly', Attribute::OPERATOR_EQUALS, true
         );
     }
-    
+
     public function testAttributeQueryUsingEmbeddedField()
     {
         $this->assertAttributeQueryEquals(
@@ -265,7 +265,7 @@ class QueryListenerTest extends AbstractTestCase
             'head.replacable', Attribute::OPERATOR_EQUALS, false
         );
     }
-    
+
     public function testAttributeQueryUsingMappedField()
     {
         $this->assertAttributeQueryEquals(
@@ -273,7 +273,7 @@ class QueryListenerTest extends AbstractTestCase
             'isAbleToBreedUnderWater', Attribute::OPERATOR_EQUALS, false
         );
     }
-    
+
     public function testAttributeQueryUsingMappedFieldInEmbeddedDocument()
     {
         $this->assertAttributeQueryEquals(
@@ -281,15 +281,15 @@ class QueryListenerTest extends AbstractTestCase
             'head.isPartOfMainBloodCirculation', Attribute::OPERATOR_EQUALS, false
         );
     }
-    
+
     public function testBuildQuery()
     {
         $qb = new QueryBuilder();
         $qb->getEventManager()->attach($this->queryListener);
-        
+
         $selector = SelectorParser::parseSelector('dog#526fa3a24c1680730b000000.long-hair.black[maxAge>12]');
         $query = $qb->build($selector);
-        
+
         $this->assertEquals([
             'type' => 'dog',
             '_id' => '526fa3a24c1680730b000000',
@@ -297,42 +297,42 @@ class QueryListenerTest extends AbstractTestCase
             'maxAge' => ['$gt' => 12]
         ], $query['query']);
     }
-    
+
     public function testBuildPathQuery()
     {
         $category = new Category();
         $category->path = '/Animals';
         $category->roles = ['animals'];
-        
+
         $dm = $this->queryListener->getDocumentManager();
         $dm->persist($category);
         $dm->flush();
-        
+
         $queryListener = new QueryListener($this->queryListener->getDocumentManager(), 'ValuQueryTest\TestAsset\Category');
-        
+
         $category = new Category();
         $category->path = '/Animals/Dogs and cats/Height > Length';
-        
+
         $qb = new QueryBuilder();
         $qb->getEventManager()->attach($queryListener);
-        
+
         $selector = SelectorParser::parseSelector('/$animals/Docs\\ and\\ cats/Height\\ \\>\\ Length/*');
         $query = $qb->build($selector);
-        
+
         $this->assertEquals([
             'path' => ['$regex' => '^/Animals/Docs and cats/Height \> Length/.*$'],
         ], $query['query']);
     }
-    
+
     private function assertAttributeQueryEquals($expected, $field, $operator, $condition)
     {
         $query = new ArrayObject();
         $this->assertTrue($this->makeAttributeQuery($query, $field, $operator, $condition));
         $query = $query->getArrayCopy();
-        
+
         $this->assertEquals($expected, $query['query']);
     }
-    
+
     private function makeAttributeQuery(ArrayObject $query, $field, $operator, $condition)
     {
         $selector = new Attribute($field, $operator, $condition);
