@@ -479,6 +479,32 @@ class QueryHelperTest extends AbstractTestCase
         $this->assertFalse($this->queryHelper->exists(['type' => 'cat']));
     }
 
+    public function testDistinct()
+    {
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
+        $tiger = $this->createTestEntity('Cat',['name' => 'Tiger']);
+
+        $this->assertEquals(['Lion', 'Tiger'], $this->queryHelper->distinct('name'));
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    public function testDistinctWithInvalidField()
+    {
+        $this->queryHelper->distinct(['name']);
+    }
+
+    public function testDistinctWithQuery()
+    {
+        $lion = $this->createTestEntity('Cat',['name' => 'Lion']);
+        $tiger = $this->createTestEntity('Cat',['name' => 'Tiger']);
+        $bulldog = $this->createTestEntity('Dog',['name' => 'Bulldog']);
+        $grazydog = $this->createTestEntity('Dog',['name' => 'Grazydog']);
+
+        $this->assertEquals(['Bulldog', 'Grazydog'], $this->queryHelper->distinct('name', ['type' => 'dog']));
+    }
+
     /**
      * Tests queryHelper->isEmptyQueryParam()
      */

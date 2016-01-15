@@ -16,159 +16,159 @@ use ValuQuery\DoctrineMongoOdm\Listener\FilterListener;
 
 /**
  * DoctineMongoDB ODM query helper
- * 
+ *
  */
 class QueryHelper
 {
     /**
      * Mongo ID type
-     * 
+     *
      * @var string
      */
     const ID_MONGO = 1;
-    
+
     /**
      * UUID3 type
-     * 
+     *
      * @var string
      */
     const ID_UUID3 = 2;
-    
+
     /**
      * UUID5 type
-     * 
+     *
      * @var string
      */
     const ID_UUID5 = 3;
-    
+
     /**
      * Indicates find operation for a single entity
      *
      * @var string
      */
     const FIND_ONE = 1;
-    
+
     /**
      * Indicates find operation for multiple entities
-     * 
+     *
      * @var string
      */
     const FIND_MANY = 2;
 
     /**
      * Indicates count operation
-     * 
+     *
      * @var int
      */
     const COUNT = 3;
-    
+
     /**
      * Indicates query parse operation
      *
      * @var int
      */
     const PARSE = 4;
-    
+
     /**
      * Indicates distinct operation
      *
      * @var int
      */
     const DISTINCT = 5;
-    
+
     /**
      * Universal selector
-     * 
+     *
      * @var string
      */
     const UNIVERSAL_SELECTOR = '*';
-    
+
     /**
      * ID selector prefix
-     * 
+     *
      * @var string
      */
     const ID_PREFIX = '#';
-    
+
     /**
      * Custom command identifier prefix for array queries
-     * 
+     *
      * @var string
      */
     const CMD = '@';
-    
+
     /**
      * Document manager
-     * 
+     *
      * @var DocumentManager
      */
     protected $documentManager;
-    
+
     /**
      * Document name
-     * 
+     *
      * @var string
      */
     protected $documentName;
-    
+
     /**
      * Length of the ID for autodetection
-     * 
+     *
      * @var int
      */
     protected $idLength = null;
-    
+
     /**
      * ID type
-     * 
+     *
      * @var string
      */
     protected $idType = null;
-    
+
     /**
      * QueryBuilder
-     * 
+     *
      * @var QueryBuilder
      */
     protected $queryBuilder;
-    
+
     /**
      * Default query listener
-     * 
+     *
      * @var QueryListener
      */
     protected $queryListener;
-    
+
     /**
      * Available query filters
-     * 
+     *
      * @var array
      */
     protected $filters;
-    
+
     /**
      * Value converter instance
-     * 
+     *
      * @var ValueConverter
      */
     protected $converter;
-    
+
     public function __construct(DocumentManager $dm, $documentName)
     {
         $this->documentManager = $dm;
         $this->documentName = $documentName;
     }
-    
+
     /**
      * Perform query and retrieve matched documents or fields
-     * 
+     *
      * Query may be a string, in which case it is treated as
-     * a selector. Query may also be an associative array, 
+     * a selector. Query may also be an associative array,
      * in which case it is passed directly as query criteria to
      * query builder. Last, query may be an array with numeric
      * indexes, in which case it is considered as an array of
      * sub queries (match any).
-     * 
+     *
      * @param mixed $query                Query
      * @param null|string|array $fields   Field(s) to return
      * @return array|Doctrine\ODM\MongoDB\Cursor Mongo cursor or array of documents or values for requested fields.
@@ -178,25 +178,25 @@ class QueryHelper
     {
         return $this->doQuery($query, $fields);
     }
-    
+
     /**
      * Query and retrieve exactly one document or specified document fields
-     * 
+     *
      * @see Helper::query()        for description of parameter usage
-     * 
+     *
      * @param string|array $query   Query
      * @param string|array $fields  Field(s) to return
-     * @return mixed                Document, field value or array of values. 
+     * @return mixed                Document, field value or array of values.
      *                              Returns null if query doesn't match.
      */
     public function queryOne($query, $fields = null)
     {
         return $this->doQuery($query, $fields, self::FIND_ONE);
     }
-    
+
     /**
      * Parse query and return corresponding query specs ready to be sent to collection's find method
-     * 
+     *
      * @param string|array $query
      * @param null|string|array $fields
      * @return array
@@ -205,10 +205,10 @@ class QueryHelper
     {
         return $this->doQuery($query, $fields, self::PARSE);
     }
-    
+
     /**
      * Count number of documents matching the query
-     * 
+     *
      * @param mixed $query
      * @return int
      */
@@ -216,7 +216,7 @@ class QueryHelper
     {
         return $this->doQuery($query, null, self::COUNT);
     }
-    
+
     /**
      * Fetch distinct values for given field
      *
@@ -224,14 +224,18 @@ class QueryHelper
      * @param mixed $query
      * @return int
      */
-    public function distinct($field, $query)
+    public function distinct($field, $query = '*')
     {
+        if (!is_string($field)) {
+            throw new \InvalidArgumentException("Invalid value for argument 'field'");
+        }
+
         return $this->doQuery($query, $field, self::DISTINCT);
     }
-    
+
     /**
      * Test whether or not any document matches the query
-     * 
+     *
      * @param mixed $query
      * @return boolean
      */
@@ -239,11 +243,11 @@ class QueryHelper
     {
         return $this->count($query) >= 1;
     }
-    
+
     /**
      * Test whether given query parameter represents
      * an empty query
-     * 
+     *
      * @param mixed $query
      * @return boolean
      */
@@ -259,10 +263,10 @@ class QueryHelper
             return false;
         }
     }
-    
+
     /**
      * Enable ID autodetection
-     * 
+     *
      * @param string $type ID type
      * @return QueryHelper
      */
@@ -280,15 +284,15 @@ class QueryHelper
                 throw new \InvalidArgumentException('Unrecognized ID type');
                 break;
         }
-        
+
         $this->idType = $type;
-        
+
         return $this;
     }
-    
+
     /**
      * Disable ID autodetection
-     * 
+     *
      * @return QueryHelper
      */
     public function disableIdDetection()
@@ -296,27 +300,27 @@ class QueryHelper
         $this->idLength = null;
         return $this;
     }
-    
+
     /**
      * Retrieve document manager instance
-     * 
+     *
      * @return DocumentManager
      */
     public function getDocumentManager()
     {
         return $this->documentManager;
     }
-    
+
     /**
      * Retrieve document name
-     * 
+     *
      * @return string
      */
     public function getDocumentName()
     {
         return $this->documentName;
     }
-    
+
     /**
      * @return multitype:
      */
@@ -335,7 +339,7 @@ class QueryHelper
 
 	/**
      * Retrieve query builder instance
-     * 
+     *
      * @return QueryBuilder
      */
     public function getQueryBuilder()
@@ -344,13 +348,13 @@ class QueryHelper
             $this->queryBuilder = new QueryBuilder();
             $this->queryBuilder->getEventManager()->attach($this->getDefaultQueryListener());
         }
-        
+
         return $this->queryBuilder;
     }
-    
+
     /**
      * Retrieve default listener for query builder
-     * 
+     *
      * @return QueryListener
      */
     public function getDefaultQueryListener()
@@ -359,19 +363,19 @@ class QueryHelper
             $this->queryListener = new QueryListener(
                 $this->getDocumentManager(), $this->documentName);
         }
-        
+
         return $this->queryListener;
     }
-    
+
     /**
      * Attach filter listener to query builder
-     * 
+     *
      * Filter listener listens to applyPseudoSelector event and
      * enables/disables document manager filters when correct
      * pseudo selector is used.
-     * 
+     *
      * After query, restoreFilters should be called for the listener.
-     * 
+     *
      * @return \ValuQuery\DoctrineMongoOdm\Listener\FilterListener|NULL
      */
     private function attachFilterListener()
@@ -379,16 +383,16 @@ class QueryHelper
         if (sizeof($this->getFilters())) {
             $listener = new FilterListener($this->getDocumentManager(), $this->getFilters());
             $this->getQueryBuilder()->getEventManager()->attach('applyPseudoSelector', $listener);
-            
+
             return $listener;
         }
-        
+
         return null;
     }
-    
+
     /**
      * Performs query
-     * 
+     *
      * @param mixed $query
      * @param array $fields
      * @param int $mode
@@ -404,90 +408,90 @@ class QueryHelper
                 return null;
             }
         }
-        
+
         // Attach filter listener, if filters are enabled
         $filterListener = $this->attachFilterListener();
-        
+
         try {
             if ($query instanceof \MongoId) {
                 $query = (string) $query;
             }
-            
+
             if ($query instanceof Selector) {
-                
+
                 $q = $this->getQueryBuilder()->build($query);
                 $this->applyFields($q, $fields);
-                
+
                 $result = $this->process($q, $fields, $mode);
-                
+
                 // Restore filters, applied by filter listener
                 if ($filterListener) {
                     $filterListener->restoreFilters();
                 }
-                
+
                 return $result;
             } else if (is_string($query)) {
                 $result = $this->doFindBySelector($query, $fields, $mode);
-                
+
                 // Restore filters, applied by filter listener
                 if ($filterListener) {
                     $filterListener->restoreFilters();
                 }
-                
+
                 return $result;
             } elseif(is_array($query)) {
-                
+
                 if(empty($query) || $this->isAssociativeArray($query)) {
                     return $this->doFindByArray($query, $fields, $mode);
                 } else {
                     $mainQuery = new ArrayObject();
                     $mainQuery['query']['$or'] = [];
-                    
+
                     $this->applyFields($mainQuery, $fields);
-                    
+
                     foreach ($query as $selector) {
                         $subQuery = $this->applySelector($selector, true);
-                        
+
                         $mainQuery['query']['$or'][] = $subQuery['query'];
-                        
+
                         foreach (['sort', 'limit', 'skip'] as $copy) {
                             if (isset($subQuery[$copy]) && !isset($mainQuery[$copy])) {
                                 $mainQuery[$copy] = $subQuery[$copy];
                             }
                         }
                     }
-                    
+
                     $result = $this->process($mainQuery, $fields, $mode);
-                    
+
                     // Restore filters, applied by filter listener
                     if ($filterListener) {
                         $filterListener->restoreFilters();
                     }
-                    
+
                     return $result;
                 }
             } else {
                 $type = gettype($query);
-                
+
                 if ($type === 'object') {
-                    $type = 'object of type '.get_class($query);    
+                    $type = 'object of type '.get_class($query);
                 }
-                
+
                 throw new InvalidQueryException(
                     sprintf('Unrecognized query format; string or array expected, %s received', $type)
                 );
             }
         } catch (\Exception $e) {
-            
+
             // Restore filters, applied by filter listener
             if ($filterListener) {
                 $filterListener->restoreFilters();
             }
-            
+
             throw $e;
         }
     }
-    
+
     /**
      * Applies selector to query
      *
@@ -499,19 +503,19 @@ class QueryHelper
     {
         if ($useIdDetection) {
             $id = $this->detectId($selector);
-            
+
             if ($id !== null) {
                 $selector = '#'.$selector;
             }
         }
-        
+
         $definition = SelectorParser::parseSelector($selector);
         return $this->getQueryBuilder()->build($definition);
     }
-    
+
     /**
      * Perform find by array of criteria
-     * 
+     *
      * This functionality is partly copied from DocumentPersister class.
      *
      * @see \Doctrine\ODM\MongoDB\Persisters\DocumentPersister::loadAll()
@@ -523,37 +527,37 @@ class QueryHelper
     protected function doFindByArray(array $query, $fields = null, $mode = self::FIND_MANY)
     {
         $odmQuery = new ArrayObject();
-    
+
         // Parse internal commands
         foreach (array('sort', 'limit', 'offset') as $cmd) {
             if (array_key_exists(self::CMD . $cmd, $query)) {
-                
+
                 if ($cmd === 'offset') {
                     $mongoCmd = 'skip';
                 } else {
                     $mongoCmd = $cmd;
                 }
-                
+
                 $odmQuery[$mongoCmd] = $query[self::CMD . $cmd];
                 unset($query[self::CMD . $cmd]);
             } else {
                 $odmQuery[$cmd] = null;
             }
         }
-        
+
         // Apply fields to odm query
         $this->applyFields($odmQuery, $fields);
-        
+
         // Prepare query (e.g. map PHP attribute names to field names)
         $persister = $this->getUow()->getDocumentPersister($this->documentName);
         $odmQuery['query'] = $persister->prepareQueryOrNewObj($query);
 
         return $this->process($odmQuery, $fields, $mode);
     }
-    
+
     /**
      * Perform find by selector string
-     * 
+     *
      * @param string $selector
      * @param string|array $fields
      * @param string $mode
@@ -562,8 +566,8 @@ class QueryHelper
     {
         // Detect ID
         $id = $this->detectId($selector);
-        
-        // Find documents using faster methods 
+
+        // Find documents using faster methods
         // when ID selector is used
         if ($id !== null && $fields === null && $mode === self::FIND_ONE) {
             return $this->getDocumentManager()
@@ -572,20 +576,20 @@ class QueryHelper
         } elseif ($id !== null) {
             return $this->doFindByArray(array('id' => $id), $fields, $mode);
         }
-        
+
         if($selector && ($selector !== self::UNIVERSAL_SELECTOR)){
             $query = $this->applySelector($selector, false);
         } else {
             $query = new ArrayObject(['query' => []]);
         }
-        
+
         $this->applyFields($query, $fields);
-        return $this->process($query, $fields, $mode);    
+        return $this->process($query, $fields, $mode);
     }
-    
+
     /**
      * Process query
-     * 
+     *
      * @param ArrayObject $query
      * @param array|null|string $fields
      * @param int $mode
@@ -594,7 +598,7 @@ class QueryHelper
     protected function process(ArrayObject $query, $fields, $mode)
     {
         $preparedQuery = $this->prepareQuery($query, $mode);
-        
+
         if ($mode === self::PARSE) {
             return $preparedQuery;
         } else {
@@ -602,10 +606,10 @@ class QueryHelper
             return $this->prepareResult($result, $fields, $mode);
         }
     }
-    
+
     /**
      * Prepare query for execute
-     * 
+     *
      * @param ArrayObject $query
      * @param int $mode
      * @return array
@@ -613,51 +617,51 @@ class QueryHelper
     protected function prepareQuery(ArrayObject $query, $mode)
     {
         $query = $query->getArrayCopy();
-        
+
         $dm = $this->getDocumentManager();
         $classMeta = $dm->getClassMetadata($this->documentName);
         $documentPersister = $this->getUow()->getDocumentPersister($this->documentName);
-        
+
         $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_FIND;
-        
+
         if ($mode === self::FIND_ONE) {
             $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_FIND;
             $query['limit'] = 1;
         } else if ($mode === self::COUNT) {
             $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_COUNT;
         } else if ($mode === self::DISTINCT) {
-            $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_DISTINCT_FIELD;
+            $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_DISTINCT;
         } else {
             $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_FIND;
         }
-        
+
         // Apply filters
         $query['query'] = $documentPersister->addFilterToPreparedQuery($query['query']);
-        
+
         // Apply discriminator
         $query['query'] = $documentPersister->addDiscriminatorToPreparedQuery($query['query']);
-        
+
         if (!isset($query['select']) || empty($query['select'])) {
             $query['select'] = [];
         } else {
             $query['select'] = $documentPersister->prepareSortOrProjection($query['select']);
         }
-        
+
         if (!isset($query['sort'])) {
             $query['sort'] = [];
         } else {
             $query['sort'] = $documentPersister->prepareSortOrProjection($query['sort']);
         }
-        
+
         if (!array_key_exists('limit', $query)) {
             $query['limit'] = null;
         }
-        
+
         $query['slaveOkay'] = $classMeta->slaveOkay;
-        
+
         return $query;
     }
-    
+
     /**
      * Execute query
      *
@@ -668,10 +672,10 @@ class QueryHelper
      */
     protected function execute(array $query, $fields, $mode)
     {
-    
+
         $dm = $this->getDocumentManager();
         $coll  = $dm->getDocumentCollection($this->documentName);
-    
+
         // Count matched documents or retrieve cursor
         // using find
         if ($mode === self::COUNT) {
@@ -680,43 +684,49 @@ class QueryHelper
                     !isset($query['limit']) ? 0 : $query['limit'],
                     !isset($query['skip']) ? 0 : $query['skip']);
         } else if ($mode === self::DISTINCT) {
-            return $coll->distinct(
+            $result = $coll->distinct(
                 $fields,
                 $query['query']);
+
+            if($result instanceof \ArrayAccess && method_exists($result, 'toArray')) {
+                return $result->toArray();
+            } else {
+                return $result;
+            }
         } else {
             if (sizeof($query['select'])) {
                 foreach ($query['select'] as $field => $value) {
                     $query['select'][$field] = (bool) $value;
                 }
             }
-            
+
             $cursor = $coll->find($query['query'], $query['select']);
-            
+
             if (!isset($query['select']) || empty($query['select'])) {
                 $hydrate = true;
             } else {
                 $hydrate = false;
             }
-  
+
             // Prepare new cursor
             $newCursor = $this->prepareCursor($cursor, $query);
-            
+
             // No hydration needed, when fields are present
             if (!$hydrate) {
                 $newCursor->hydrate(false);
             }
-    
+
             // Fetch a single result or cursor
             if ($mode == self::FIND_ONE) {
                 $result = $newCursor->getSingleResult();
             } else {
                 $result = $newCursor;
             }
-    
+
             return $result;
         }
     }
-    
+
     /**
      * Prepares query result
      *
@@ -734,22 +744,22 @@ class QueryHelper
         } else if ($mode === self::DISTINCT) {
             return $result;
         }
-        
+
         if ($fields === null) {
             return $result;
         }
-        
+
         $convertSingleField = is_string($fields);
-        
+
         if ($mode == self::FIND_ONE) {
             // Do not post-process objects
             if (is_object($result)) {
                 return $result;
             }
-            
+
             $this->getValueConverter()->convertArrayToPhp(
                 $this->getDocumentName(), $result);
-            
+
             if ($convertSingleField) {
                 $success = false;
                 return $this->findFieldFromArray($fields, $result, $success);
@@ -757,30 +767,30 @@ class QueryHelper
                 if ((!isset($fields['id']) || $fields['id'] === false) && isset($result['id'])) {
                     unset($result['id']);
                 }
-                
+
                 return $result;
             }
-            
+
             return $result;
         } else {
 
             $data = [];
-            
+
             foreach ($result as $documentData) {
-                
+
                 // Do not post-process objects
                 if (is_object($documentData)) {
                     $data[] = $documentData;
                     continue;
                 }
-                
+
                 $this->getValueConverter()->convertArrayToPhp(
                         $this->getDocumentName(), $documentData);
-                
+
                 if ($convertSingleField) {
                     $success = false;
                     $fieldValue = $this->findFieldFromArray($fields, $documentData, $success);
-                    
+
                     if ($success) {
                         $data[] = $fieldValue;
                     }
@@ -788,18 +798,18 @@ class QueryHelper
                     if ((!isset($fields['id']) || $fields['id'] === false) && isset($documentData['id'])) {
                         unset($documentData['id']);
                     }
-                    
+
                     $data[] = $documentData;
                 }
             }
-            
+
             return $data;
         }
     }
-    
+
     /**
      * Apply select() for each field
-     * 
+     *
      * @param ArrayObject $query
      * @param array|string $fields
      */
@@ -808,7 +818,7 @@ class QueryHelper
         if (!$fields) {
             return false;
         }
-        
+
         if (is_string($fields)) {
             $query['select'][$fields] = true;
         } else {
@@ -821,57 +831,57 @@ class QueryHelper
 
         return true;
     }
-    
+
     /**
      * Filter array representing single document data
-     * 
+     *
      * @param array $data
      * @param array|null $fields
      */
     protected function filterDocumentData(&$data, $fields)
     {
         if (isset($data['_id'])) {
-        
+
             if (isset($fields['id']) && $fields['id'] == true) {
                 $data['id'] = $data['_id'];
             }
-        
+
             unset($data['_id']);
         }
     }
-    
+
     /**
      * Detect if value represents ID
-     * 
+     *
      * @param string $value
      * @return string|NULL
      */
     protected function detectId($value)
     {
         $matchLength = false;
-        
+
         if ($this->idLength !== null
             && strlen($value) == $this->idLength) {
-            
+
             $matchLength = true;
         } elseif ($this->idLength !== null
                   && strlen($value) == $this->idLength+1
                   && substr($value, 0, 1) == self::ID_PREFIX) {
-            
+
             $matchLength = true;
             $value = substr($value, 1);
         }
-        
+
         if ($matchLength && ctype_alnum($value)) {
             return $value;
         } else {
             return null;
         }
     }
-    
+
     /**
      * Retrieve value converter instance
-     * 
+     *
      * @return \ValuQuery\DoctrineMongoOdm\ValueConverter
      */
     protected function getValueConverter()
@@ -879,10 +889,10 @@ class QueryHelper
         if ($this->converter === null) {
             $this->converter = new ValueConverter($this->getDocumentManager());
         }
-        
+
         return $this->converter;
     }
-    
+
     /**
      * Find a field from recursive array
      *
@@ -894,13 +904,13 @@ class QueryHelper
     private function findFieldFromArray($field, array $data, &$success)
     {
         $fields = explode('.', $field);
-    
+
         foreach ($fields as $fieldName) {
             if (!is_array($data)) {
                 $success = false;
                 return null;
             }
-    
+
             if (array_key_exists($fieldName, $data)) {
                 $data = $data[$fieldName];
             } else {
@@ -908,24 +918,24 @@ class QueryHelper
                 return null;
             }
         }
-    
+
         $success = true;
         return $data;
     }
-    
+
     /**
      * Retrieve current Unit of Work
-     * 
+     *
      * @return \Doctrine\ODM\MongoDB\UnitOfWork
      */
     private function getUow()
     {
         return $this->getDocumentManager()->getUnitOfWork();
     }
-    
+
     /**
      * Test whether given array is associative
-     * 
+     *
      * @param array $array
      * @return boolean    True if associative (and not empty)
      */
@@ -933,10 +943,10 @@ class QueryHelper
     {
         return (array_keys($array) !== range(0, count($array) - 1));
     }
-    
+
     /**
      * Wraps the supplied base cursor as an ODM one.
-     * 
+     *
      * This functionality is copied from DocumentPersister class.
      *
      * @see \Doctrine\ODM\MongoDB\Persisters\DocumentPersister::wrapCursor()
@@ -950,15 +960,15 @@ class QueryHelper
         if (isset($query['sort'])) {
             $cursor->sort($query['sort']);
         }
-        
+
         if (isset($query['limit'])) {
             $cursor->limit($query['limit']);
         }
-        
+
         if (isset($query['skip'])) {
             $cursor->skip($query['skip']);
         }
-        
+
         $dm = $this->getDocumentManager();
         return new Cursor(
             $cursor,
