@@ -70,6 +70,13 @@ class QueryHelper
     const PARSE = 4;
     
     /**
+     * Indicates distinct operation
+     *
+     * @var int
+     */
+    const DISTINCT = 5;
+    
+    /**
      * Universal selector
      * 
      * @var string
@@ -208,6 +215,18 @@ class QueryHelper
     public function count($query)
     {
         return $this->doQuery($query, null, self::COUNT);
+    }
+    
+    /**
+     * Fetch distinct values for given field
+     *
+     * @param string $field
+     * @param mixed $query
+     * @return int
+     */
+    public function distinct($field, $query)
+    {
+        return $this->doQuery($query, $field, self::DISTINCT);
     }
     
     /**
@@ -579,7 +598,7 @@ class QueryHelper
         if ($mode === self::PARSE) {
             return $preparedQuery;
         } else {
-            $result = $this->execute($preparedQuery, $mode);
+            $result = $this->execute($preparedQuery, $fields, $mode);
             return $this->prepareResult($result, $fields, $mode);
         }
     }
@@ -606,6 +625,8 @@ class QueryHelper
             $query['limit'] = 1;
         } else if ($mode === self::COUNT) {
             $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_COUNT;
+        } else if ($mode === self::DISTINCT) {
+            $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_DISTINCT_FIELD;
         } else {
             $query['type'] = \Doctrine\MongoDB\Query\Query::TYPE_FIND;
         }
@@ -641,10 +662,11 @@ class QueryHelper
      * Execute query
      *
      * @param array $query
+     * @param array|string $fields
      * @param int $mode
      * @return \Doctrine\ODM\MongoDB\Cursor|\Doctrine\ODM\MongoDB\LoggableCursor|int
      */
-    protected function execute(array $query, $mode)
+    protected function execute(array $query, $fields, $mode)
     {
     
         $dm = $this->getDocumentManager();
@@ -657,6 +679,10 @@ class QueryHelper
                     $query['query'],
                     !isset($query['limit']) ? 0 : $query['limit'],
                     !isset($query['skip']) ? 0 : $query['skip']);
+        } else if ($mode === self::DISTINCT) {
+            return $coll->distinct(
+                $fields,
+                $query['query']);
         } else {
             if (sizeof($query['select'])) {
                 foreach ($query['select'] as $field => $value) {
@@ -704,6 +730,8 @@ class QueryHelper
         if ($result === null) {
             return null;
         } else if ($mode === self::COUNT && is_int($result)) {
+            return $result;
+        } else if ($mode === self::DISTINCT) {
             return $result;
         }
         

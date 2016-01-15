@@ -59,6 +59,14 @@ class QueryableRepository extends BaseRepository
     }
     
     /**
+     * @see \ValuQuery\DoctrineMongoOdm\QueryHelper::distinct()
+     */
+    public function distinct($field, $query)
+    {
+        return $this->getQueryHelper()->distinct($field, $query);
+    }
+    
+    /**
      * @see \ValuQuery\DoctrineMongoOdm\QueryHelper::exists()
      */
     public function exists($query)
