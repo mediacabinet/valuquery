@@ -15,13 +15,13 @@ class Organ{
 	public $id;
 
 	/**
-	 * @ODM\String
+	 * @ODM\Field(type="string")
 	 * @var string
 	 */
 	public $name;
 	
 	/**
-	 * @ODM\Boolean
+	 * @ODM\Field(type="boolean")
 	 * @var boolean
 	 */
 	public $replacable = false;

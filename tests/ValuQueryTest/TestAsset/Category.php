@@ -16,7 +16,7 @@ class Category{
 	public $id;
 
 	/**
-	 * @ODM\String
+	 * @ODM\Field(type="string")
 	 * @var string
 	 */
 	public $name;
@@ -28,7 +28,7 @@ class Category{
 	public $parent;
 	
 	/**
-	 * @ODM\String
+	 * @ODM\Field(type="string")
 	 * @var string
 	 */
 	public $path;
@@ -36,7 +36,7 @@ class Category{
 	/**
 	 * Classes
 	 *
-	 * @ODM\Collection
+	 * @ODM\Field(type="collection")
 	 * @param array
 	 */
 	public $roles = array();

@@ -10,7 +10,7 @@ class Dog
     extends Animal
 {
     /**
-     * @ODM\String
+     * @ODM\Field(type="string")
      * @var string
      */
     public $barkSound = 'whuf!';

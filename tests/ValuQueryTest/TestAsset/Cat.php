@@ -10,7 +10,7 @@ class Cat
     extends Animal
 {
     /**
-     * @ODM\String
+     * @ODM\Field(type="string")
      * @var string
      */
     public $murrSound = 'murrrrr';

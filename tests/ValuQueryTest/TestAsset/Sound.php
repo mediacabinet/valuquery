@@ -15,7 +15,7 @@ class Sound{
 	public $id;
 
 	/**
-	 * @ODM\String
+	 * @ODM\Field(type="string")
 	 * @var string
 	 */
 	public $says;

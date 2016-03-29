@@ -19,31 +19,31 @@ abstract class Animal{
 	public $id;
 
 	/**
-	 * @ODM\String
+	 * @ODM\Field(type="string")
 	 * @var string
 	 */
 	public $name;
 
 	/**
-	 * @ODM\Int
+	 * @ODM\Field(type="int")
 	 * @var int
 	 */
 	public $maxAge;
 
 	/**
-	 * @ODM\Float
+	 * @ODM\Field(type="float")
 	 * @var float
 	 */
 	public $maxWidth;
 
 	/**
-	 * @ODM\Boolean
+	 * @ODM\Field(type="boolean")
 	 * @var boolean
 	 */
 	public $canFly;
 
 	/**
-	 * @ODM\String
+	 * @ODM\Field(type="string")
 	 * @var string
 	 */
 	public $path;
@@ -57,7 +57,7 @@ abstract class Animal{
 	/**
 	 * Classes
 	 *
-	 * @ODM\Collection
+	 * @ODM\Field(type="collection")
 	 * @param array
 	 */
 	public $classes = array();
@@ -65,7 +65,7 @@ abstract class Animal{
 	/**
 	 * Classes
 	 *
-	 * @ODM\Collection
+	 * @ODM\Field(type="collection")
 	 * @param array
 	 */
 	public $roles = array();
@@ -107,7 +107,7 @@ abstract class Animal{
 	public $sound;
 
 	/**
-	 * @ODM\Date
+	 * @ODM\Field(type="date")
 	 * @var \DateTime
 	 */
 	public $createdAt;
