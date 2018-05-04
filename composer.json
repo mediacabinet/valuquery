@@ -14,11 +14,9 @@
 	"require" : {
 		"php" : ">=5.4.0",
 		"zendframework/zendframework" : ">=2.0",
-		"doctrine/mongodb-odm" : "dev-master",
-		"doctrine/doctrine-mongo-odm-module" : "dev-master"
-	},
-	"require-dev" : {
-		"doctrine/doctrine-module" : "0.8 as 0.9"
+		"doctrine/mongodb-odm" : "1.0.0-BETA9",
+		"doctrine/doctrine-mongo-odm-module": "0.9.1",
+		"doctrine/doctrine-module": "0.8.*"
 	},
 	"autoload" : {
 		"psr-0" : {
