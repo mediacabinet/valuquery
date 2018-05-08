@@ -27,6 +27,5 @@
         "psr-0" : {
             "ValuQueryTest\\" : "tests/"
         }
-    },
-	"minimum-stability" : "alpha"
+    }
 }
