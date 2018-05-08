@@ -14,7 +14,7 @@
 	"require" : {
 		"php" : ">=5.4.0",
 		"zendframework/zendframework" : ">=2.0",
-		"doctrine/mongodb-odm" : "1.0.0-BETA9",
+		"doctrine/mongodb-odm" : "1.0.*",
 		"doctrine/doctrine-mongo-odm-module": "0.9.1",
 		"doctrine/doctrine-module": "0.8.*"
 	},
