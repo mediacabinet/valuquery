@@ -1,4 +1,5 @@
 <?php
+
 namespace ValuQueryTest\DoctrineMongoOdm;
 
 use PHPUnit_Framework_TestCase as TestCase;
@@ -16,15 +17,15 @@ abstract class AbstractTestCase extends TestCase
      * @var DocumentManager
      */
     protected $dm;
-    
+
     protected function setUp()
     {
         $evm = new Evm();
-    
+
         /* @var $driver MappingDriver */
         $driver = AnnotationDriver::create();
         AnnotationDriver::registerAnnotationClasses();
-    
+
         $configuration = new Configuration();
         $configuration->addDocumentNamespace('valuquerytest', __DIR__ . '/../TestAsset');
         $configuration->setProxyDir(__DIR__ . '/../../resources/proxy');
@@ -36,33 +37,34 @@ abstract class AbstractTestCase extends TestCase
         $configuration->setDefaultDB('valuquerytest');
         $configuration->setMetadataCacheImpl(new ArrayCache());
         $configuration->setMetadataDriverImpl($driver);
-    
-        $connection = new Connection('mongodb://localhost:27017', [], $configuration, $evm);
-    
+
+        $connection = new Connection('mongodb://' . getenv('MONGO_SERVER') . ':' . getenv('MONGO_PORT'), [],
+            $configuration, $evm);
+
         $this->dm = DocumentManager::create($connection, $configuration, $evm);
-        
+
         $this->dm->getConnection()->dropDatabase('valuquerytest');
     }
-    
+
     /**
      * Create a persisted test entity
-     * 
+     *
      * @param string $type
      * @param array $specs
      * @return \Doctrine\ODM\MongoDB\DocumentManager
      */
     protected function createTestEntity($type, array $specs)
     {
-        $class = 'ValuQueryTest\\TestAsset\\'.ucfirst($type);
+        $class = 'ValuQueryTest\\TestAsset\\' . ucfirst($type);
         $entity = new $class;
-    
+
         foreach ($specs as $key => $value) {
             $entity->{$key} = $value;
         }
-    
+
         $this->dm->persist($entity);
         $this->dm->flush();
-    
+
         return $entity;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace ValuQuery\MongoDb;
 
 use ValuQuery\MongoDb\Exception;
@@ -19,28 +20,28 @@ class QueryListener implements ListenerAggregateInterface
      * @var \Zend\Stdlib\CallbackHandler[]
      */
     protected $listeners = array();
-    
+
     /**
      * Mongo command prefix
      *
      * @var string
      */
     private $cmd = '$';
-    
+
     /**
      * Name of the field to match role selector
-     * 
+     *
      * @var string
      */
     private $roleField = 'roles';
-    
+
     /**
      * Name of the field to match class selector
      *
      * @var string
      */
     private $classField = 'classes';
-    
+
     /**
      * Name of the field to match path selector
      *
@@ -55,14 +56,14 @@ class QueryListener implements ListenerAggregateInterface
     public function attach(EventManagerInterface $events)
     {
         $this->listeners[] = $events->attach(
-            'prepareQuery', 
+            'prepareQuery',
             array(
                 $this,
                 'prepareQuery'
             ));
-        
+
         $this->listeners[] = $events->attach(
-            'combineSequence', 
+            'combineSequence',
             array(
                 $this,
                 'combineSequence'
@@ -73,51 +74,51 @@ class QueryListener implements ListenerAggregateInterface
                 $this,
                 'applyUniversalSelector'
             ));
-        
+
         $this->listeners[] = $events->attach(
-            'applyElementSelector', 
+            'applyElementSelector',
             array(
                 $this,
                 'applyElementSelector'
             ));
-        
+
         $this->listeners[] = $events->attach(
-            'applyIdSelector', 
+            'applyIdSelector',
             array(
                 $this,
                 'applyIdSelector'
             ));
-        
+
         $this->listeners[] = $events->attach(
-            'applyRoleSelector', 
+            'applyRoleSelector',
             array(
                 $this,
                 'applyRoleSelector'
             ));
-        
+
         $this->listeners[] = $events->attach(
-            'applyClassSelector', 
+            'applyClassSelector',
             array(
                 $this,
                 'applyClassSelector'
             ));
-        
+
         $this->listeners[] = $events->attach(
-            'applyPathSelector', 
+            'applyPathSelector',
             array(
                 $this,
                 'applyPathSelector'
             ));
-        
+
         $this->listeners[] = $events->attach(
-            'applyAttributeSelector', 
+            'applyAttributeSelector',
             array(
                 $this,
                 'applyAttributeSelector'
             ));
-        
+
         $this->listeners[] = $events->attach(
-            'applyPseudoSelector', 
+            'applyPseudoSelector',
             array(
                 $this,
                 'applyPseudoSelector'
@@ -141,7 +142,7 @@ class QueryListener implements ListenerAggregateInterface
                 new ArrayObject()
             );
         }
-        
+
         $query = $event->getQuery();
         if (!isset($query['query'])) {
             $query['query'] = [];
@@ -149,25 +150,27 @@ class QueryListener implements ListenerAggregateInterface
     }
 
     public function combineSequence(EventInterface $event)
-    {}
-    
+    {
+    }
+
     public function applyUniversalSelector()
     {
         return true;
     }
 
     public function applyElementSelector(SimpleSelectorEvent $event)
-    {}
+    {
+    }
 
     public function applyIdSelector(SimpleSelectorEvent $event)
     {
         $idSelector = $event->getSimpleSelector();
         $this->applyQueryCommand(
-            $event->getQuery(), 
-            '_id', 
-            null, 
+            $event->getQuery(),
+            '_id',
+            null,
             $idSelector->getCondition());
-        
+
         return true;
     }
 
@@ -175,14 +178,14 @@ class QueryListener implements ListenerAggregateInterface
     {
         if ($this->getRoleField()) {
             $roleSelector = $event->getSimpleSelector();
-            
+
             $this->applyQueryCommand(
                 $event->getQuery(),
                 $this->getRoleField(),
                 'in',
                 [$roleSelector->getCondition()],
                 true);
-            
+
             return true;
         }
     }
@@ -191,29 +194,29 @@ class QueryListener implements ListenerAggregateInterface
     {
         if ($this->getClassField()) {
             $classSelector = $event->getSimpleSelector();
-            
+
             $this->applyQueryCommand(
-                $event->getQuery(), 
-                $this->getClassField(), 
-                'in', 
-                [$classSelector->getCondition()], 
+                $event->getQuery(),
+                $this->getClassField(),
+                'in',
+                [$classSelector->getCondition()],
                 true);
-            
+
             return true;
         }
     }
-    
+
     public function applyPathSelector(SimpleSelectorEvent $event)
     {
         if ($this->getPathField()) {
             $pathSelector = $event->getSimpleSelector();
-            
+
             $this->applyQueryCommand(
-                $event->getQuery(), 
-                $this->getPathField(), 
-                null, 
+                $event->getQuery(),
+                $this->getPathField(),
+                null,
                 Path::PATH_SEPARATOR . ltrim($pathSelector->getPath(), Path::PATH_SEPARATOR));
-            
+
             return true;
         }
     }
@@ -223,26 +226,26 @@ class QueryListener implements ListenerAggregateInterface
         $attrSelector = $event->getSimpleSelector();
         return $this->doApplyAttributeSelector($attrSelector, $event->getQuery());
     }
-    
+
     public function applyPseudoSelector(SimpleSelectorEvent $event)
     {
         $pseudoSelector = $event->getSimpleSelector();
         $query = $event->getQuery();
-        
+
         if ($pseudoSelector instanceof SimpleSelector\Pseudo\Sort) {
             $order = strtolower($pseudoSelector->getOrder()) === 'asc' ? 1 : -1;
             $query['sort'][$pseudoSelector->getAttribute()] = $order;
             return true;
         } elseif ($pseudoSelector->getClassName() == 'limit') {
-            $query['limit'] = intval($pseudoSelector->getClassValue()); 
+            $query['limit'] = intval($pseudoSelector->getClassValue());
             return true;
-        } elseif (in_array($pseudoSelector->getClassName(), 
-                [
-                    'startingFrom',
-                    'offset',
-                    'skip'
-                ])) {
-            
+        } elseif (in_array($pseudoSelector->getClassName(),
+            [
+                'startingFrom',
+                'offset',
+                'skip'
+            ])) {
+
             $query['skip'] = intval($pseudoSelector->getClassValue());
             return true;
         }
@@ -256,7 +259,7 @@ class QueryListener implements ListenerAggregateInterface
         return $this->roleField;
     }
 
-	/**
+    /**
      * @param string $roleField
      */
     public function setRoleField($roleField)
@@ -264,7 +267,7 @@ class QueryListener implements ListenerAggregateInterface
         $this->roleField = $roleField;
     }
 
-	/**
+    /**
      * @return string
      */
     public function getClassField()
@@ -272,7 +275,7 @@ class QueryListener implements ListenerAggregateInterface
         return $this->classField;
     }
 
-	/**
+    /**
      * @param string $classField
      */
     public function setClassField($classField)
@@ -280,7 +283,7 @@ class QueryListener implements ListenerAggregateInterface
         $this->classField = $classField;
     }
 
-	/**
+    /**
      * @return string
      */
     public function getPathField()
@@ -288,20 +291,20 @@ class QueryListener implements ListenerAggregateInterface
         return $this->pathField;
     }
 
-	/**
+    /**
      * @param string $pathField
      */
     public function setPathField($pathField)
     {
         $this->pathField = $pathField;
     }
-    
+
     protected function doApplyAttributeSelector(SimpleSelector\Attribute $attrSelector, $query)
     {
-        $operator   = $attrSelector->getOperator();
-        $attr       = $attrSelector->getAttribute();
-        $cond       = $attrSelector->getCondition();
-        
+        $operator = $attrSelector->getOperator();
+        $attr = $attrSelector->getAttribute();
+        $cond = $attrSelector->getCondition();
+
         switch ($operator) {
             case null:
                 $this->applyQueryCommand($query, $attr, 'exists', true);
@@ -325,16 +328,16 @@ class QueryListener implements ListenerAggregateInterface
                 $this->applyQueryCommand($query, $attr, 'lte', $cond);
                 break;
             case SimpleSelector\Attribute::OPERATOR_IN_LIST:
-                
+
                 if (is_string($cond)) {
                     $list = preg_split('/\s+/', trim($cond));
                     array_map('trim', $list);
-                } else if (!is_array($cond)) {
+                } elseif (!is_array($cond)) {
                     $list = [$cond];
                 } else {
                     $list = $cond;
                 }
-                
+
                 $this->applyQueryCommand($query, $attr, 'in', $list);
                 break;
             case SimpleSelector\Attribute::OPERATOR_REG_EXP:
@@ -346,21 +349,27 @@ class QueryListener implements ListenerAggregateInterface
             case SimpleSelector\Attribute::OPERATOR_SUBSTR_PREFIX:
                 $this->applyQueryCommand($query, $attr, 'regex', '^' . preg_quote($cond, '/'));
                 break;
+            case SimpleSelector\Attribute::OPERATOR_NOT_SUBSTR_PREFIX:
+                $this->applyQueryCommand($query, $attr, 'regex', '^(?!' . preg_quote($cond, '/') . ')');
+                break;
             case SimpleSelector\Attribute::OPERATOR_SUBSTR_SUFFIX:
                 $this->applyQueryCommand($query, $attr, 'regex', '' . preg_quote($cond, '/') . '$');
+                break;
+            case SimpleSelector\Attribute::OPERATOR_NOT_SUBSTR_SUFFIX:
+                $this->applyQueryCommand($query, $attr, 'regex', '(?!' . preg_quote($cond, '/') . ')$');
                 break;
             default:
                 return new Exception\UnknownOperatorException(
                     sprintf("Unknown operator '%s'", $operator));
                 break;
         }
-        
+
         return true;
     }
-    
+
     /**
      * Apply regex command
-     * 
+     *
      * @param ArrayAccess $query
      * @param string $field
      * @param string $pattern
@@ -375,29 +384,29 @@ class QueryListener implements ListenerAggregateInterface
             $this->applyQueryCommand($query, $field, 'regex', $pattern);
         }
     }
-    
+
     /**
      * Apply query command
-     * 
-     * @param ArrayAccess $query    Query array
-     * @param string $field         Field name
-     * @param string|null $command  Command name (leave null for 'is equal to' command)
-     * @param mixed $value          Query value (condition)
-     * @param boolean $append       Set true to append value to existing value array
+     *
+     * @param ArrayAccess $query Query array
+     * @param string $field Field name
+     * @param string|null $command Command name (leave null for 'is equal to' command)
+     * @param mixed $value Query value (condition)
+     * @param boolean $append Set true to append value to existing value array
      *                              if it has been previously set
      */
     protected function applyQueryCommand(ArrayAccess $query, $field, $command, $value, $append = false)
     {
         $this->filterField($query, $field, $value);
-        
+
         if ($command) {
-            $cmd = $this->cmd.$command;
-            
+            $cmd = $this->cmd . $command;
+
             if ($append
                 && isset($query['query'][$field][$cmd])
                 && is_array($query['query'][$field][$cmd])) {
                 $query['query'][$field][$cmd] = array_merge(
-                        $query['query'][$field][$cmd], (array)$value);
+                    $query['query'][$field][$cmd], (array)$value);
             } else {
                 $query['query'][$field][$cmd] = $value;
             }
@@ -405,14 +414,15 @@ class QueryListener implements ListenerAggregateInterface
             $query['query'][$field] = $value;
         }
     }
-    
+
     /**
      * Filter value of field for query
-     * 
+     *
      * @param ArrayAccess $query
-     * @param string $field     Field name
-     * @param mixed $value      Value to filter
+     * @param string $field Field name
+     * @param mixed $value Value to filter
      */
     protected function filterField(ArrayAccess $query, &$field, &$value)
-    {}
+    {
+    }
 }
